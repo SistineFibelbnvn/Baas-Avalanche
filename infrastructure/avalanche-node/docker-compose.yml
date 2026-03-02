@@ -1,0 +1,38 @@
+version: '3.8'
+
+# Avalanche Local Network using official avalanchego image
+# This runs a single local node for development
+
+services:
+  avalanche-node:
+    image: avaplatform/avalanchego:latest
+    container_name: avalanche-node
+    restart: unless-stopped
+    ports:
+      # HTTP RPC
+      - "9650:9650"
+      # Staking port
+      - "9651:9651"
+    volumes:
+      - avalanche-data:/root/.avalanchego
+    environment:
+      - AVAGO_NETWORK_ID=local
+    command: >
+      /avalanchego/build/avalanchego
+      --network-id=local
+      --http-host=0.0.0.0
+      --http-port=9650
+      --staking-port=9651
+      --public-ip=127.0.0.1
+      --db-type=memdb
+    networks:
+      - avalanche-network
+
+volumes:
+  avalanche-data:
+    name: baas-avalanche-data
+
+networks:
+  avalanche-network:
+    driver: bridge
+    name: baas-avalanche-network

@@ -1,0 +1,13 @@
+\chapter*{TÓM TẮT}
+\addcontentsline{toc}{chapter}{Tóm tắt}
+
+Khóa luận nghiên cứu chuyên sâu kiến trúc Blockchain Layer 1 trên nền tảng Avalanche và xây dựng một hệ thống phần mềm hoàn chỉnh cho phép người dùng khởi tạo, vận hành và giám sát mạng Blockchain tùy chỉnh (Subnet) thông qua giao diện web trực quan.
+
+Về phương diện nghiên cứu, khóa luận phân tích cơ chế đồng thuận Snowball --- một giao thức xác suất dựa trên phương pháp lấy mẫu lặp (repeated random sub-sampling), so sánh với các giao thức BFT truyền thống trên các tiêu chí hiệu năng, khả năng chịu lỗi và mức phi tập trung. Đồng thời, khóa luận nghiên cứu kiến trúc đa chuỗi của Avalanche bao gồm Primary Network (X-Chain, P-Chain, C-Chain) và mô hình Subnet mở rộng.
+
+Về phương diện kỹ thuật, hệ thống được xây dựng với kiến trúc Modular Monolith bao gồm: (1) Backend Orchestrator phát triển bằng NestJS tích hợp Docker API để quản lý vòng đời validator node; (2) Frontend Dashboard phát triển bằng Next.js với WebSocket cho giám sát thời gian thực; (3) Monitoring Stack tích hợp Prometheus và Grafana. Hệ thống hỗ trợ xác thực người dùng qua JWT và Google OAuth, phân quyền theo mô hình sở hữu tài nguyên.
+
+Kết quả thử nghiệm cho thấy hệ thống có khả năng giảm thời gian triển khai một Subnet từ hàng giờ (thao tác CLI thủ công) xuống còn dưới 2 phút thông qua giao diện wizard, đồng thời cung cấp bảng điều khiển giám sát trực quan với độ trễ cập nhật dưới 3 giây.
+
+\vspace{0.5cm}
+\noindent\textbf{Từ khóa:} Blockchain Layer 1, Avalanche Subnet, Blockchain-as-a-Service, giao thức Snowball, Docker container, giám sát thời gian thực.

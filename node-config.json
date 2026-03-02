@@ -1,0 +1,8 @@
+{
+    "http-host": "0.0.0.0",
+    "http-allowed-hosts": [
+        "*"
+    ],
+    "api-auth-required": false,
+    "api-info-required": false
+}

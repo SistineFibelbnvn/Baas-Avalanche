@@ -1,0 +1,87 @@
+groups:
+  - name: avalanche_alerts
+    rules:
+      # Node Status Alerts
+      - alert: AvalancheNodeDown
+        expr: up{job="avalanche_node"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Avalanche node is down"
+          description: "Avalanche node has been unreachable for more than 1 minute."
+
+      - alert: AvalancheNodeHighCPU
+        expr: rate(process_cpu_seconds_total{job="avalanche_node"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Avalanche node CPU usage is high"
+          description: "CPU usage has been above 80% for 5 minutes."
+
+      - alert: AvalancheNodeHighMemory
+        expr: process_resident_memory_bytes{job="avalanche_node"} > 8000000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Avalanche node memory usage is high"
+          description: "Memory usage is above 8GB."
+
+      - alert: AvalancheNoPeers
+        expr: avalanche_network_peers == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Avalanche node has no peers"
+          description: "Node has lost all network peers for more than 2 minutes."
+
+      - alert: AvalancheLowPeers
+        expr: avalanche_network_peers < 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Avalanche node has few peers"
+          description: "Node has fewer than 5 peers connected."
+
+      # Blockchain Alerts
+      - alert: AvalancheChainStuck
+        expr: increase(avalanche_C_blks_accepted_count[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "C-Chain appears to be stuck"
+          description: "No new blocks accepted on C-Chain in 5 minutes."
+
+      - alert: AvalancheHighBlockTime
+        expr: rate(avalanche_C_blks_accepted_sum[1m]) / rate(avalanche_C_blks_accepted_count[1m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "C-Chain block time is high"
+          description: "Average block time is above 5 seconds."
+
+  - name: system_alerts
+    rules:
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk usage is high"
+          description: "Disk usage is above 85%."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "System memory usage is high"
+          description: "Memory usage is above 90%."

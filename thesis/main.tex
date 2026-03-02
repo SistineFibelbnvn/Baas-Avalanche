@@ -1,0 +1,114 @@
+\documentclass[13pt,a4paper,oneside]{report}
+
+% --- GÓI CẤU HÌNH CƠ BẢN ---
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage[left=3.5cm, right=2.0cm, top=3.0cm, bottom=3.0cm]{geometry}
+\usepackage{mathptmx} % Font Times New Roman
+\usepackage{graphicx}
+\usepackage{setspace}
+\onehalfspacing
+
+% --- ĐỊNH DẠNG TIÊU ĐỀ ---
+\usepackage{titlesec}
+
+\titleformat{\chapter}[display]
+  {\normalfont\large\bfseries\centering}
+  {\chaptertitlename\ \thechapter}{5pt}{\LARGE}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\large\bfseries}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\itshape}{\thesubsection}{1em}{}
+
+% --- CÁC GÓI PHỤ TRỢ ---
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{longtable}
+
+% Cấu hình Code Listing
+\usepackage{color}
+\usepackage{xcolor}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    tabsize=2,
+    frame=single,
+    xleftmargin=2em
+}
+\lstset{style=mystyle}
+
+% --- BẮT ĐẦU TÀI LIỆU ---
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \textbf{\large BỘ GIÁO DỤC VÀ ĐÀO TẠO} \\
+    \textbf{\large TRƯỜNG ĐẠI HỌC CÔNG NGHỆ TP.HCM} \\
+    \textbf{\large KHOA CÔNG NGHỆ THÔNG TIN} \\
+    \vspace{3cm}
+    \textbf{\large KHÓA LUẬN TỐT NGHIỆP} \\
+    \vspace{1.5cm}
+    \textbf{\Large NGHIÊN CỨU VÀ XÂY DỰNG\\NỀN TẢNG BLOCKCHAIN LAYER 1} \\
+    \vspace{3cm}
+    \begin{flushleft}
+        \hspace{4cm}\textbf{Sinh viên thực hiện:} Nguyễn Đức Huy \\
+        \hspace{4cm}\textbf{Mã sinh viên:} 22028191 \\
+        \hspace{4cm}\textbf{Ngành:} Công nghệ thông tin \\
+        \hspace{4cm}\textbf{Giáo viên hướng dẫn:} [Tên GVHD]
+    \end{flushleft}
+    \vfill
+    \textbf{TP. Hồ Chí Minh, 2025}
+\end{titlepage}
+
+% --- PHẦN ĐẦU ---
+\pagenumbering{roman}
+\include{loicamdoan}
+\include{loicamon}
+\include{tomtat}
+\include{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\clearpage
+
+% --- NỘI DUNG CHÍNH ---
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\include{chuong1}
+\include{chuong2}
+\include{chuong3}
+\include{chuong4}
+\include{chuong5}
+\include{chuong6}
+
+% --- TÀI LIỆU THAM KHẢO ---
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document}

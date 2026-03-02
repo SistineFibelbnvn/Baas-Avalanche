@@ -1,0 +1,106 @@
+# ===========================
+# Thesis / Report files (private)
+# ===========================
+22028191*
+*.docx
+*.pdf
+*thesis*
+*Thesis*
+*THESIS*
+*report*
+*Report*
+*REPORT*
+*FINAL_REPORT*
+report_result*
+docs/thesis/
+thesis/
+
+# ===========================
+# AI Assistant files (private)
+# ===========================
+.gemini/
+.cursor/
+.claude/
+.aider*
+.copilot/
+.github/copilot*
+brain/
+**/brain/
+*.conversation*
+*chat_history*
+*_conversation*
+implementation_plan.md
+walkthrough.md
+
+# ===========================
+# Environment files (secrets)
+# ===========================
+.env
+.env.local
+.env.*.local
+.env.production
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
+
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# ===========================
+# Build outputs
+# ===========================
+dist/
+build/
+.next/
+out/
+**/dist/
+**/build/
+
+# ===========================
+# Logs
+# ===========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+
+# ===========================
+# Database
+# ===========================
+*.sqlite
+*.db
+prisma/dev.db
+prisma/dev.db-journal
+
+# ===========================
+# OS files
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================
+# IDE / Editor
+# ===========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ===========================
+# Misc
+# ===========================
+.turbo/
+.vercel/
+*.tsbuildinfo

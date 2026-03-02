@@ -1,0 +1,257 @@
+\chapter{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG}
+
+\section{Phân tích yêu cầu}
+
+\subsection{Yêu cầu chức năng}
+
+Dựa trên phân tích bài toán thực tế và các thách thức đã nêu ở Chương 1, hệ thống cần đáp ứng các yêu cầu chức năng sau:
+
+\begin{table}[H]
+\centering
+\caption{Bảng yêu cầu chức năng của hệ thống}
+\label{tab:functional_requirements}
+\begin{tabular}{|c|p{3cm}|p{8cm}|}
+\hline
+\textbf{Mã} & \textbf{Tên} & \textbf{Mô tả} \\ \hline
+FR-01 & Đăng ký tài khoản & Người dùng có thể tạo tài khoản bằng email/mật khẩu hoặc đăng nhập bằng Google OAuth. \\ \hline
+FR-02 & Đăng nhập/Đăng xuất & Hệ thống xác thực qua JWT, phiên đăng nhập kéo dài 24 giờ. \\ \hline
+FR-03 & Tạo Subnet & Người dùng tạo Subnet mới thông qua wizard giao diện web, tùy chỉnh cấu hình Genesis, VM và tham số mạng. \\ \hline
+FR-04 & Quản lý Subnet & Khởi động, dừng, xóa Subnet. Chỉ chủ sở hữu mới có quyền thao tác. \\ \hline
+FR-05 & Quản lý Validator & Thêm/xóa validator node vào Subnet, xem trạng thái hoạt động của từng node. \\ \hline
+FR-06 & Giám sát thời gian thực & Dashboard hiển thị block height, TPS, trạng thái node, peer count cập nhật liên tục qua WebSocket. \\ \hline
+FR-07 & Triển khai Smart Contract & Giao diện cho phép deploy Solidity contract lên C-Chain hoặc Subnet-EVM. \\ \hline
+FR-08 & Xem lịch sử block & Hiển thị danh sách block gần nhất kèm chi tiết giao dịch. \\ \hline
+FR-09 & Cảnh báo tự động & Hệ thống gửi cảnh báo khi phát hiện bất thường (node offline, CPU quá tải). \\ \hline
+FR-10 & Benchmark hiệu năng & Chạy bài kiểm thử hiệu năng tự động và hiển thị kết quả TPS, latency. \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Yêu cầu phi chức năng}
+
+\begin{table}[H]
+\centering
+\caption{Bảng yêu cầu phi chức năng}
+\label{tab:nonfunctional_requirements}
+\begin{tabular}{|c|p{3cm}|p{8cm}|}
+\hline
+\textbf{Mã} & \textbf{Tên} & \textbf{Mô tả} \\ \hline
+NFR-01 & Hiệu năng & API phản hồi dưới 500ms trong điều kiện bình thường, Dashboard cập nhật dưới 3 giây. \\ \hline
+NFR-02 & Bảo mật & Mã hóa mật khẩu bcrypt, JWT token có thời hạn, CORS policy, SQL injection prevention. \\ \hline
+NFR-03 & Khả dụng & Hệ thống hoạt động ổn định khi Avalanche node offline (graceful degradation). \\ \hline
+NFR-04 & Khả năng mở rộng & Kiến trúc modular cho phép thêm module mới mà không ảnh hưởng module hiện tại. \\ \hline
+NFR-05 & Tương thích & Hỗ trợ trình duyệt Chrome, Firefox, Edge phiên bản mới; chạy trên Linux/WSL. \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Các Actor và Use Case}
+
+Hệ thống phục vụ hai nhóm đối tượng người dùng (Actor) chính:
+
+\begin{itemize}
+    \item \textbf{User (Người dùng):} Cá nhân hoặc tổ chức sử dụng hệ thống để tạo và quản lý các mạng Blockchain Subnet riêng. User có quyền tạo Subnet, thêm validator, giám sát node, và triển khai Smart Contract trên Subnet của mình.
+
+    \item \textbf{System (Hệ thống nền):} Các thành phần tự động của hệ thống bao gồm: Docker Engine quản lý container, Prometheus thu thập metrics, WebSocket Gateway đẩy dữ liệu real-time, và cron scheduler chạy các tác vụ định kỳ.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{2cm}\textit{[Hình 3.1: Sơ đồ Use Case tổng thể của hệ thống]}\vspace{2cm}}}
+\caption{Sơ đồ Use Case tổng thể}
+\label{fig:usecase}
+\end{figure}
+
+\section{Thiết kế kiến trúc tổng thể}
+
+\subsection{Kiến trúc Modular Monolith}
+
+Hệ thống áp dụng mô hình kiến trúc Modular Monolith --- một sự cân bằng giữa kiến trúc Monolithic truyền thống (dễ triển khai nhưng khó mở rộng) và kiến trúc Microservices (linh hoạt nhưng phức tạp vận hành). Trong mô hình này, toàn bộ hệ thống backend được đóng gói trong một tiến trình duy nhất (single process) nhưng bên trong được phân chia rõ ràng thành các module độc lập, mỗi module có Controller, Service và Repository riêng.
+
+Kiến trúc tổng thể bao gồm ba tầng chính:
+
+\begin{enumerate}
+    \item \textbf{Tầng Presentation (Frontend):} Ứng dụng web Next.js chạy trên trình duyệt, giao tiếp với Backend qua hai kênh: RESTful API (HTTP) cho các thao tác CRUD và WebSocket (Socket.IO) cho dữ liệu giám sát real-time.
+
+    \item \textbf{Tầng Application Logic (Backend):} NestJS Orchestrator điều phối toàn bộ logic nghiệp vụ, bao gồm các module:
+    \begin{itemize}
+        \item \textbf{AuthModule:} Xác thực JWT, Google OAuth, quản lý phiên đăng nhập.
+        \item \textbf{SubnetsModule:} Quản lý vòng đời Subnet (CRUD, start/stop).
+        \item \textbf{ValidatorsModule:} Quản lý validator node, cấp phát Docker container.
+        \item \textbf{NodeStatusModule:} Thu thập và phát sóng dữ liệu trạng thái node.
+        \item \textbf{RpcProxyModule:} Proxy các yêu cầu JSON-RPC tới Avalanche node.
+        \item \textbf{ContractsModule:} Biên dịch và triển khai Smart Contract.
+        \item \textbf{BenchmarkModule:} Chạy bài kiểm thử hiệu năng tự động.
+    \end{itemize}
+
+    \item \textbf{Tầng Infrastructure:} Bao gồm PostgreSQL (lưu trữ dữ liệu quan hệ qua Prisma ORM), Docker Engine (quản lý container validator), và Monitoring Stack (Prometheus + Grafana).
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Hình 3.2: Kiến trúc tổng thể hệ thống --- Modular Monolith Architecture]}\vspace{3cm}}}
+\caption{Kiến trúc tổng thể hệ thống}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Luồng dữ liệu chính}
+
+Hệ thống vận hành theo hai luồng dữ liệu chính chạy song song:
+
+\textbf{Luồng 1 --- Request/Response (Đồng bộ):} Người dùng thao tác trên Frontend $\rightarrow$ HTTP Request gửi tới NestJS Controller $\rightarrow$ Service xử lý logic $\rightarrow$ tương tác Docker API / Prisma ORM $\rightarrow$ trả Response về Frontend. Luồng này phục vụ các thao tác CRUD: tạo Subnet, thêm validator, deploy contract.
+
+\textbf{Luồng 2 --- WebSocket Push (Bất đồng bộ):} WebSocket Gateway chạy setInterval mỗi 3--5 giây $\rightarrow$ gọi NodeStatusService thu thập metrics từ Avalanche node (JSON-RPC) và Docker API $\rightarrow$ phát sóng (broadcast) dữ liệu tới tất cả client đang kết nối qua sự kiện Socket.IO \texttt{`status'} và \texttt{`chain-stats'}. Luồng này cung cấp dữ liệu giám sát real-time không cần client polling.
+
+\section{Thiết kế cơ sở dữ liệu}
+
+\subsection{Mô hình thực thể - quan hệ (ERD)}
+
+Hệ thống sử dụng PostgreSQL làm cơ sở dữ liệu quan hệ, với Prisma ORM đảm nhận vai trò tương tác và quản lý phiên bản schema. Mô hình dữ liệu bao gồm 7 bảng chính:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Hình 3.3: Entity-Relationship Diagram (ERD) của cơ sở dữ liệu]}\vspace{3cm}}}
+\caption{Sơ đồ thực thể - quan hệ}
+\label{fig:erd}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả các bảng trong cơ sở dữ liệu}
+\label{tab:database_tables}
+\begin{tabular}{|l|p{8cm}|c|}
+\hline
+\textbf{Tên bảng} & \textbf{Mô tả} & \textbf{Quan hệ} \\ \hline
+\texttt{User} & Thông tin tài khoản: id, email, name, password (bcrypt hash). & 1-N với Network \\ \hline
+\texttt{Network} & Mỗi Subnet được lưu như một Network record: tên, cấu hình Genesis JSON, trạng thái (running/stopped), VM type. & N-1 với User, 1-N với Validator \\ \hline
+\texttt{Validator} & Thông tin validator node: nodeId, containerId (Docker), port, trạng thái hoạt động, thuộc Network nào. & N-1 với Network \\ \hline
+\texttt{Operation} & Log thao tác: loại (create/start/stop/delete), trạng thái (pending/success/error), thời gian thực hiện, thuộc Network nào. & N-1 với Network \\ \hline
+\texttt{Contract} & Thông tin Smart Contract đã deploy: tên, ABI, bytecode, địa chỉ (address), chain ID. & N-1 với Network \\ \hline
+\texttt{MetricSnapshot} & Ảnh chụp metrics tại thời điểm: block height, TPS, peer count, CPU/RAM usage. & N-1 với Network \\ \hline
+\texttt{Alert} & Cảnh báo tự động: loại cảnh báo, mức nghiêm trọng, nội dung, trạng thái (active/resolved). & N-1 với Network \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Thiết kế chi tiết bảng User}
+
+\begin{lstlisting}[caption={Prisma Schema --- Model User}, label={lst:prisma_user}, language={}]
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  password  String    // bcrypt hashed
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  networks  Network[]
+}
+\end{lstlisting}
+
+Bảng \texttt{User} sử dụng \texttt{cuid()} làm khóa chính thay vì auto-increment integer nhằm tránh xung đột ID trong môi trường phân tán và không để lộ số lượng user qua thứ tự ID. Mật khẩu được mã hóa bằng bcrypt với salt round = 10 trước khi lưu vào cơ sở dữ liệu.
+
+\subsection{Thiết kế chi tiết bảng Network}
+
+\begin{lstlisting}[caption={Prisma Schema --- Model Network}, label={lst:prisma_network}, language={}]
+model Network {
+  id          String      @id @default(cuid())
+  name        String
+  subnetId    String?
+  chainId     String?
+  vmType      String      @default("SubnetEVM")
+  status      String      @default("stopped")
+  genesisData Json?
+  rpcUrl      String?
+  userId      String
+  user        User        @relation(fields: [userId],
+                           references: [id])
+  validators  Validator[]
+  operations  Operation[]
+  contracts   Contract[]
+  metrics     MetricSnapshot[]
+  alerts      Alert[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+\end{lstlisting}
+
+
+\section{Thiết kế API RESTful}
+
+Hệ thống cung cấp tổng cộng 15 endpoint RESTful chính, được tổ chức theo nhóm chức năng. Tất cả endpoint (trừ \texttt{/auth/*}) đều yêu cầu JWT token trong header \texttt{Authorization}.
+
+\begin{longtable}{|l|l|p{3.5cm}|p{4cm}|}
+\caption{Đặc tả API RESTful của hệ thống} \label{tab:api_spec} \\
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Mô tả} & \textbf{Response} \\ \hline
+\endfirsthead
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Mô tả} & \textbf{Response} \\ \hline
+\endhead
+POST & \texttt{/auth/register} & Đăng ký tài khoản & \texttt{201 \{id, email, name\}} \\ \hline
+POST & \texttt{/auth/login} & Đăng nhập & \texttt{200 \{access\_token, user\}} \\ \hline
+GET & \texttt{/auth/me} & Lấy thông tin user & \texttt{200 \{id, email, name\}} \\ \hline
+GET & \texttt{/auth/google} & Redirect Google OAuth & \texttt{302 Redirect} \\ \hline
+GET & \texttt{/auth/google/callback} & Callback Google OAuth & \texttt{302 Redirect + JWT} \\ \hline
+GET & \texttt{/subnets} & Danh sách Subnet & \texttt{200 [Network]} \\ \hline
+POST & \texttt{/subnets} & Tạo Subnet mới & \texttt{201 \{network, operation\}} \\ \hline
+POST & \texttt{/subnets/:id/start} & Khởi động Subnet & \texttt{200 \{status\}} \\ \hline
+POST & \texttt{/subnets/:id/stop} & Dừng Subnet & \texttt{200 \{status\}} \\ \hline
+DELETE & \texttt{/subnets/:id} & Xóa Subnet & \texttt{200 \{deleted\}} \\ \hline
+GET & \texttt{/node-status} & Trạng thái node & \texttt{200 \{healthy, blockHeight, ...\}} \\ \hline
+GET & \texttt{/node-status/dashboard} & Dashboard stats & \texttt{200 \{tps, peers, ...\}} \\ \hline
+GET & \texttt{/node-status/blocks} & Block gần nhất & \texttt{200 [Block]} \\ \hline
+POST & \texttt{/contracts/deploy} & Deploy contract & \texttt{201 \{address, txHash\}} \\ \hline
+POST & \texttt{/benchmarks/run} & Chạy benchmark & \texttt{200 \{tps, latency, ...\}} \\ \hline
+\end{longtable}
+
+
+\section{Thiết kế luồng xử lý --- Sơ đồ tuần tự}
+
+\subsection{Luồng đăng nhập và xác thực JWT}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Hình 3.4: Sequence Diagram --- Luồng đăng nhập Email/Password]}\vspace{3cm}}}
+\caption{Sơ đồ tuần tự --- Đăng nhập}
+\label{fig:seq_login}
+\end{figure}
+
+Luồng xác thực diễn ra theo trình tự: (1)~Client gửi POST \texttt{/auth/login} với email và password; (2)~AuthService truy vấn User từ PostgreSQL qua Prisma; (3)~So sánh password bằng \texttt{bcrypt.compare()}; (4)~Nếu hợp lệ, JwtService tạo token với payload \texttt{\{sub: user.id, email: user.email\}} và thời hạn 24 giờ; (5)~Trả về \texttt{access\_token} và thông tin user cho client.
+
+Đối với Google OAuth, luồng khác biệt ở bước (1)--(3): Client redirect tới Google, Google xác thực và callback về \texttt{/auth/google/callback} với profile, GoogleStrategy tự động tạo hoặc tìm User dựa trên email, sau đó bước (4)--(5) tương tự.
+
+\subsection{Luồng tạo Subnet}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Hình 3.5: Sequence Diagram --- Luồng tạo Subnet qua wizard]}\vspace{3cm}}}
+\caption{Sơ đồ tuần tự --- Tạo Subnet}
+\label{fig:seq_create_subnet}
+\end{figure}
+
+Quá trình tạo Subnet là quy trình phức tạp nhất trong hệ thống, bao gồm nhiều bước tương tác với Docker và Avalanche CLI:
+
+\begin{enumerate}
+    \item Người dùng nhập thông tin cấu hình qua wizard: tên Subnet, loại VM, tham số Genesis (chain ID, gas limit, pre-funded addresses).
+    \item Frontend gửi POST \texttt{/subnets} kèm JWT token.
+    \item SubnetsController kiểm tra JWT $\rightarrow$ trích xuất userId $\rightarrow$ chuyển tới SubnetsService.
+    \item SubnetsService tạo bản ghi Network trong PostgreSQL với trạng thái ``creating''.
+    \item SubnetsService gọi Avalanche CLI để: tạo Subnet trên P-Chain $\rightarrow$ tạo Blockchain $\rightarrow$ lấy subnetId và chainId.
+    \item SubnetsService gọi Docker API để khởi tạo container AvalancheGo cho mỗi validator, cấp phát port tự động.
+    \item Cập nhật trạng thái Network thành ``running'' và trả kết quả về Frontend.
+\end{enumerate}
+
+\subsection{Luồng giám sát WebSocket}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Hình 3.6: Sequence Diagram --- Luồng giám sát WebSocket real-time]}\vspace{3cm}}}
+\caption{Sơ đồ tuần tự --- Giám sát WebSocket}
+\label{fig:seq_websocket}
+\end{figure}
+
+Khi người dùng mở trang Dashboard, Frontend thiết lập kết nối WebSocket tới namespace \texttt{/node-status}. Ngay khi kết nối thành công:
+
+\begin{enumerate}
+    \item NodeStatusGateway ghi nhận client mới và bắt đầu vòng lặp broadcast (mỗi 5 giây).
+    \item Mỗi chu kỳ: NodeStatusService gọi Avalanche Info API $\rightarrow$ lấy nodeVersion, networkId, peerCount, health status $\rightarrow$ phát sóng sự kiện \texttt{`status'} tới tất cả client.
+    \item Nếu client subscribe chain cụ thể (\texttt{`subscribe\_chain'}), Gateway tạo interval riêng (mỗi 3 giây) gọi \texttt{fetchChainStats(rpcUrl)} $\rightarrow$ lấy blockHeight, TPS, avgBlockTime $\rightarrow$ phát sóng \texttt{`chain-stats'} cho client đó.
+    \item Khi client ngắt kết nối, Gateway tự động dọn dẹp (cleanup) interval tương ứng để tránh rò rỉ bộ nhớ (memory leak).
+\end{enumerate}

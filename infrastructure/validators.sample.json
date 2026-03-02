@@ -1,0 +1,21 @@
+[
+  {
+    "name": "validator-01",
+    "nodeId": "NodeID-8jfS5nZrExample1111111111111111",
+    "rewardAddress": "0xA11ce0011111111111111111111111111111111",
+    "stakeAmount": 4000,
+    "startTime": "2025-01-05T08:00:00Z",
+    "endTime": "2025-07-04T08:00:00Z",
+    "delegationFee": 2
+  },
+  {
+    "name": "validator-02",
+    "nodeId": "NodeID-D4tA7zExample22222222222222222",
+    "rewardAddress": "0xb0b0002222222222222222222222222222222222",
+    "stakeAmount": 4000,
+    "startTime": "2025-01-05T08:05:00Z",
+    "endTime": "2025-07-04T08:05:00Z",
+    "delegationFee": 5
+  }
+]
+

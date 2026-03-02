@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User represents an authenticated account
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  networks  Network[]
+}
+
+// Network represents a deployed L1 blockchain
+model Network {
+  id            String   @id @default(cuid())
+  name          String
+  chainId       Int
+  vmType        String   @default("subnet-evm")
+  network       String   @default("LOCAL") // LOCAL, TESTNET, MAINNET
+  status        String   @default("PENDING") // PENDING, DEPLOYING, RUNNING, FAILED
+  
+  // Blockchain identifiers
+  subnetId      String?
+  blockchainId  String?
+  
+  // RPC endpoints
+  rpcUrl        String?
+  wsUrl         String?
+  
+  // Configuration
+  tokenSymbol   String   @default("TOKEN")
+  tokenSupply   String?
+  gasLimit      Int      @default(20000000)
+  minBaseFee    String   @default("25000000000")
+  targetBlockRate Int    @default(2)
+  
+  // Validator settings
+  validatorType String   @default("poa") // poa, pos
+  validatorManagerOwner String?
+  ownerAddress  String?  // Wallet address of the owner (legacy)
+  
+  // User ownership
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  // VM settings
+  vmVersion     String   @default("latest")
+  enableICM     Boolean  @default(true)
+  configMode    String   @default("test") // test, production, custom
+  
+  // CLI info
+  cliVersion    String?
+  cliOutput     String?  @db.Text
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  validators    Validator[]
+  contracts     Contract[]
+  operations    Operation[]
+  benchmarks    Benchmark[]
+  
+  @@index([status])
+  @@index([network])
+}
+
+// Validator represents a network validator
+model Validator {
+  id          String   @id @default(cuid())
+  nodeId      String
+  weight      Int      @default(1)
+  stakeAmount String?
+  startTime   DateTime?
+  endTime     DateTime?
+  uptime      Float    @default(1.0)
+  connected   Boolean  @default(false)
+  
+  // Docker container info
+  containerId String?
+  
+  // Network relation
+  networkId   String
+  network     Network  @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([networkId, nodeId])
+  @@index([networkId])
+}
+
+// Contract represents a deployed smart contract
+model Contract {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  abi         Json?
+  bytecode    String?  @db.Text
+  txHash      String?
+  
+  // Network relation
+  networkId   String
+  network     Network  @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  deployedBy  String?  // Wallet address
+  deployedAt  DateTime @default(now())
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([networkId])
+  @@index([address])
+}
+
+// Operation represents a CLI operation (create, deploy, etc.)
+model Operation {
+  id          String    @id @default(cuid())
+  type        String    // CREATE, DEPLOY, ADD_VALIDATOR, etc.
+  status      String    @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  log         String?   @db.Text
+  error       String?   @db.Text
+  
+  // Network relation
+  networkId   String
+  network     Network   @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  
+  @@index([networkId])
+  @@index([status])
+}
+
+// Benchmark represents a performance test result
+model Benchmark {
+  id              String   @id @default(cuid())
+  
+  // Configuration
+  duration        Int      // seconds
+  targetTps       Int
+  concurrency     Int
+  
+  // Results
+  avgTps          Float?
+  maxTps          Float?
+  avgLatency      Float?   // ms
+  successRate     Float?   // percentage
+  totalTx         Int?
+  
+  // Raw data
+  dataPoints      Json?    // Array of { timestamp, tps, latency, etc. }
+  
+  // Network relation
+  networkId       String
+  network         Network  @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([networkId])
+}
+
+// Settings for application configuration
+model Settings {
+  id              String   @id @default("default")
+  
+  // Node settings
+  nodeHost        String   @default("127.0.0.1")
+  nodePort        Int      @default(9650)
+  nodeProtocol    String   @default("http")
+  
+  // CLI settings
+  cliPath         String   @default("avalanche")
+  wslDistro       String?  @default("Ubuntu-22.04")
+  
+  updatedAt       DateTime @updatedAt
+}
+
+enum BenchmarkStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+// Alert model for monitoring alerts
+model Alert {
+  id          String   @id @default(cuid())
+  rule        String   // Alert rule name
+  severity    String   @default("INFO") // INFO, WARNING, CRITICAL
+  message     String
+  status      String   @default("ACTIVE") // ACTIVE, ACKNOWLEDGED, RESOLVED
+  metadata    Json?    // Additional alert data
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+}

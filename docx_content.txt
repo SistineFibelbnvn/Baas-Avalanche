@@ -1,0 +1,561 @@
+ĐẠI HỌC QUỐC GIA HÀ NỘI TRƯỜNG ĐẠI HỌC CÔNG NGHỆ
+BÁO CÁO DỰ ÁN CÔNG NGHỆ
+Ngành: Khoa học máy tính
+NGHIÊN CỨU VÀ XÂY DỰNG NỀN TẢNG QUẢN TRỊ MẠNG BLOCKCHAIN LAYER-1 HƯỚNG DOANH NGHIỆP THÔNG QUA GIAO DIỆN DỰA TRÊN AVALANCHE
+Sinh viên thực hiện: Nguyễn Đức Huy
+Mã sinh viên: 22028191
+Giảng viên hướng dẫn: TS. Lê Hồng Hải
+Hà Nội, 2025
+LỜI CAM ĐOAN
+Em xin cam đoan đây là dự án công nghệ độc lập của em dưới sự hướng dẫn thầy TS. Lê Hồng Hải. Các nội dung nghiên cứu, số liệu phân tích và kết quả thực hiện trình bày trong dự án là hoàn toàn trung thực, có nguồn gốc trích dẫn rõ ràng và chưa từng được công bố trong bất kỳ công trình nào khác tại các cơ sở đào tạo trong và ngoài nước. Mọi tài liệu tham khảo được sử dụng đều đã được trích dẫn đầy đủ theo quy định học thuật. Em xin chịu trách nhiệm hoàn toàn về tính trung thực của dự án này.
+LỜI CẢM ƠN
+Lời đầu tiên, em xin gửi lời cảm ơn sâu sắc nhất đến toàn thể quý thầy, cô giảng viên khoa Công nghệ Thông tin - Trường Đại học Công nghệ - Đại học Quốc gia Hà Nội. Những kiến thức mà các thầy cô giảng viên đã truyền đạt trong suốt thời gian học tập trên giảng đường đại học là nền tảng quý báu và là hành trang vô giá để em có thể hoàn thành dự án công nghệ này. Đặc biệt, em xin bày tỏ lòng biết ơn và sự kính trọng đến thầy TS. Lê Hồng Hải. Thầy đã tận tâm dành thời gian hướng dẫn, định hướng đề tài và đưa ra những lời khuyên chuyên môn giúp em có góc nhìn rõ ràng và sáng suốt trong quá trình nghiên cứu, thực hiện dự án. Sự giúp đỡ tận tình của thầy là động lực để em nỗ lực hoàn thiện sản phẩm này.
+Mặc dù đã rất cố gắng, nhưng do giới hạn về thời gian và kiến thức, dự án chắc chắn không tránh khỏi những thiếu sót. Em rất mong nhận được những ý kiến đóng góp và sự cảm thông từ thầy cô cũng như hội đồng đánh giá để đề tài có thể hoàn thiện hơn.
+Mục lục
+LỜI CAM ĐOANi
+LỜI CẢM ƠNii
+MỞ ĐẦU1
+Đặt vấn đề1
+Hoàn cảnh lịch sử và sự tiến hóa của Web31
+Thực trạng và thách thức kỹ thuật1
+Mục tiêu và nhiệm vụ nghiên cứu2
+Mục tiêu tổng quát2
+Sứ mệnh dự án2
+Nhiệm vụ cụ thể2
+Đối tượng và phạm vi nghiên cứu2
+Đối tượng nghiên cứu2
+Phạm vi nghiên cứu3
+Phương pháp nghiên cứu3
+Kết cấu của dự án3
+CƠ SỞ LÝ THUYẾT VÀ NỀN TẢNG CÔNG NGHỆ4
+Tổng quan về Blockchain Layer 14
+Kiến trúc phân tầng của Blockchain4
+Tam giác bất khả thi (The Blockchain Trilemma)4
+Phân tích giao thức đồng thuận5
+Sự tiến hóa của các giao thức5
+Phân tích thuật toán Snowball6
+Kiến trúc hệ sinh thái Avalanche6
+Primary Network (Mạng chính)7
+Công nghệ Subnet7
+So sánh với các giải pháp quản trị Blockchain hiện có7
+Công nghệ Container (Docker)8
+Kết luận chương8
+PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG9
+Tổng quan về kịch bản thiết kế9
+Phân tích yêu cầu9
+Yêu cầu chức năng9
+Yêu cầu phi chức năng10
+Thiết kế kiến trúc hệ thống10
+Tầng Giao diện (Presentation Layer)10
+Tầng Ứng dụng (Application Layer)10
+Tầng Dữ liệu (Data Layer)11
+Tầng Hạ tầng (Infrastructure Layer)11
+Thiết kế cơ sở dữ liệu11
+Thiết kế luồng hoạt động12
+Quy trình khởi tạo Validator Node12
+Kết luận chương12
+HIỆN THỰC HÓA Ý TƯỞNG VÀ TRIỂN KHAI HỆ THỐNG13
+Công nghệ và môi trường phát triển13
+Cấu hình môi trường phát triển13
+Triển khai Backend (NestJS)13
+Cấu trúc Module và kiến trúc phần mềm13
+Chi tiết thực hiện Module Validator14
+Triển khai Frontend (Next.js)14
+Thiết kế giao diện Dashboard (UI/UX)14
+Cơ chế WebSocket Realtime15
+Hệ thống Giám sát (Monitoring Stack)15
+Cấu hình Grafana/Prometheus15
+Tích hợp Grafana Dashboard15
+Kết luận chương16
+KIỂM THỬ VÀ ĐÁNH GIÁ KẾT QUẢ17
+Mục tiêu và phương pháp kiểm thử17
+Chiến lược kiểm thử17
+Môi trường kiểm thử17
+Kịch bản Kiểm thử Chức năng17
+Kịch bản 1: Quản lý Subnet17
+Kịch bản 2: Vận hành Validator Node18
+Kịch bản 3: Giám sát và Cảnh báo18
+Đánh giá hiệu năng hệ thống18
+Đánh giá Sơ bộ và nhận xét18
+Ưu điểm của hệ thống18
+Các vấn đề tồn tại và hạn chế18
+Kết luận chương18
+KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN19
+Tổng kết các kết quả đạt được19
+Về mặt nghiên cứu khoa học19
+Về mặt sản phẩm công nghệ19
+Về mặt đóng góp cộng đồng19
+Ý nghĩa thực tiễn và khả năng ứng dụng19
+Những hạn chế còn tồn tại20
+Hướng phát triển và Tầm nhìn tương lai20
+Lời kết20
+Danh sách hình vẽ
+Sự tiến hóa của các giao thức đồng thuận5
+Kiến trúc tổng quan hệ sinh thái Avalanche và vị trí của Subnet7
+Sơ đồ kiến trúc tổng thể hệ thống11
+Giao diện Dashboard quản lý15
+Kiến trúc Monitoring Stack16
+Cấu trúc tổ chức mã nguồn dự án16
+Danh sách bảng
+So sánh các thế hệ Blockchain1
+So sánh đặc tính kỹ thuật các giao thức đồng thuận6
+So sánh các giải pháp quản trị Blockchain8
+Bảng tổng hợp yêu cầu chức năng10
+Mô tả bảng Subnet12
+Mô tả bảng ValidatorNode12
+Chương 1
+MỞ ĐẦU
+Đặt vấn đề
+Hoàn cảnh lịch sử và sự tiến hóa của Web3
+Sự ra đời của Bitcoin vào năm 2008 bởi Satoshi Nakamoto [2] đã đánh dấu một bước ngoặt lịch sử trong ngành khoa học máy tính và tài chính toàn cầu. Lần đầu tiên, mọi người có thể sở hữu một phương thức trao đổi giá trị ngang hàng (peer-to-peer) mà không cần thông qua bất kỳ tổ chức trung gian nào. Tuy nhiên, Bitcoin còn tồn tại nhiều hạn chế và chỉ dừng lại ở vai trò nền tảng, gọi cách khác là "Vàng kỹ thuật số", chủ yếu phục vụ nhu cầu lưu trữ giá trị và thanh toán cơ bản. Sự xuất hiện của Ethereum vào năm 2015 [1] đã mở ra kỷ nguyên Blockchain 2.0 với nhiều khái niệm mới như Hợp đồng thông minh (Smart Contract), biến Blockchain thành một cuốn sổ cái toàn cầu. Các nhà phát triển có thể xây dựng các ứng dụng phi tập trung (dApps) phức tạp như tài chính phi tập trung (DeFi), trò chơi (GameFi) và các tổ chức tự quản lý phi tập trung (DAO). Mặc dù vậy, khi nhu cầu sử dụng tăng vọt, Ethereum đã bộc lộ những điểm yếu chí mạng về khả năng mở rộng (Scalability). Phí gas có thời điểm lên tới hàng trăm USD cho một giao dịch, và mạng lưới thường xuyên bị tắc nghẽn, làm giảm trải nghiệm người dùng nghiêm trọng. Trong bối cảnh đó, làn sóng Blockchain thế hệ mới đã nổi lên với các đại diện tiêu biểu như Avalanche, Solana, Polkadot. Xu hướng chủ đạo của thế hệ này không còn là "One chain rules all" (Một chuỗi cho tất cả) mà là "Internet of Blockchains" (Mạng lưới các chuỗi). Điều này phù hợp nhu cầu của các doanh nghiệp hiện đại không chỉ dừng lại ở việc phát hành dApp trên một chuỗi công khai, mà họ cần những mạng lưới chuyên biệt (App-Chains) để kiểm soát hiệu năng, tùy chỉnh phí gas và đảm bảo tuân thủ pháp lý tại từng quốc gia.
+Bảng 1.1: So sánh các thế hệ Blockchain
+Đặc điểm
+Gen 1 (Bitcoin)
+Gen 2 (Ethereum)
+Gen 3 (Avalanche, Polka-
+dot)
+Mục tiêu chính
+Lưu trữ giá trị, thanh toán
+Hợpđồngthôngminh,
+dApps
+Khả năng mở rộng, Interop-
+erability, App-Chains
+Tốc độ (TPS)
+7
+15-30
+4,500+
+Độ trễ (Finality)
+60 phút
+6 phút
+< 2 giây
+Cơ chế đồng thuận
+PoW
+PoW chuyển sang PoS
+PoS, Snowball, NPoS
+Thực trạng và thách thức kỹ thuật
+Mặc dù công nghệ App-Chain, cụ thể là Avalanche Subnet, mang lại tiềm năng to lớn, nhưng rào cản kỹ thuật để tiếp cận nó vẫn còn khá phức tạp đối với đa số người dùng và doanh nghiệp vừa và nhỏ. Đầu tiên, độ phức tạp trong triển khai là một trở ngại lớn. Việc khởi tạo một Subnet yêu cầu thực thi hàng loạt các lệnh CLI (Command Line Interface) phức tạp. Người quản trị phải nắm vững các kiến thức về quản lý Node, cấu hình mạng, thiết lập quyền hạn Permisson và cấu hình Genesis file. Một sai sót nhỏ trong quá trình này, ví dụ như sai lệch timestamp hay cấu hình sai, có thể dẫn đến việc mạng không hoạt động đúng cách hoặc không thể đồng bộ. Tiếp theo, các công cụ giám sát mặc định của AvalancheGo còn rất sơ sài. Hiện tại, để theo dõi sức khỏe (Health) của một node, người quản trị chủ yếu phải dựa vào việc đọc Log file thô hoặc truy vấn các API metrics
+dạng text. Điều này làm giảm sự trực quan và không thân thiện, người quản trị thiếu đi cái nhìn tổng quan trực quan về hệ thống, trạng thái cũng như các nguy cơ tiềm ẩn. Cuối cùng, chi phí vận hành và rào cản nhân sự là một gánh nặng tài chính lớn. Để duy trì một mạng lưới blockchain ổn định 24/7, doanh nghiệp thường phải duy trì một đội ngũ kỹ sư DevOps chuyên biệt với chi phí đắt đỏ. Các tác vụ như nâng cấp quản lý node, quản lý lưu trữ khoá (Key), backup kiểm tra dữ liệu thường được thực hiện thủ công, tốn nhiều thời gian và dễ xảy ra lỗi. Từ những thách thức thực tế và hiện trạng nêu trên, em nhận thấy việc nghiên cứu và xây dựng một nền tảng quản trị mạng lưới phi tập trung, tự động hóa và trực quan hóa quy trình vận hành lấy Avalanche Subnet làm cốt lõi là vô cùng cần thiết. Đề tài không chỉ có ý nghĩa về mặt khoa học kỹ thuật mà còn có giá trị thương mại và ứng dụng thực tiễn cao.
+Mục tiêu và nhiệm vụ nghiên cứu
+Mục tiêu tổng quát
+Mục tiêu của đề tài mà em hướng tới là xây dựng một hệ thống phần mềm (Platform) hoàn chỉnh có khả năng đơn giản hóa quy trình khởi tạo, vận hành và giám sát mạng Blockchain Layer 1 dựa trên công nghệ Avalanche Subnet. Hệ thống hướng tới việc trở thành một giải pháp Blockchain-as-a-Service (BaaS) tiêu chuẩn, giúp người dùng phổ thông cũng có thể tiếp cận công nghệ này.
+Sứ mệnh dự án
+Sứ mệnh cốt lõi của dự án là "Bất kỳ ai cũng có thể tạo và quản lý Blockchain của riêng mình". Em mong muốn biến việc chạy một mạng Blockchain phức tạp trở nên đơn giản, dễ tiếp cận như việc cài đặt và sử dụng một ứng dụng web thông thường, qua đó trao quyền tự chủ công nghệ Blockchain lại cho cộng đồng.
+Nhiệm vụ cụ thể
+Để đạt được mục tiêu trên, em xác định cần thực hiện bốn nhóm nhiệm vụ chính:
+Nghiên cứu lý thuyết: Tìm hiểu sâu về kiến trúc mạng lưới Avalanche, cơ chế đồng thuận Snowball, cấu trúc dữ liệu DAG/Chain cũng như công nghệ Docker và hệ thống giám sát Grafana/Prometheus.
+Phân tích thiết kế hệ thống: Mô hình hóa các quy trình phức tạp như thêm node, tạo chain, quản lý validator.
+Hiện thực hóa sản phẩm: Xây dựng Backend bằng NestJS để quản lý logic, xây dựng Frontend Dash- board bằng Next.js để tương tác người dùng, và tích hợp hệ thống quản lý, hệ thống giám sát (Prometheus/- Grafana).
+Kiểm thử và Đánh giá: Tiến hành kiểm thử chức năng, kiểm thử tích hợp trên môi trường giả lập (Localhost) và đánh giá hiệu năng hệ thống dựa trên các kịch bản sử dụng thực tế.
+Đối tượng và phạm vi nghiên cứu
+Đối tượng nghiên cứu
+Đối tượng nghiên cứu chính của đề tài bao gồm ba thành phần công nghệ cốt lõi:
+Nền tảng Blockchain Avalanche: Tập trung vào client AvalancheGo, kiến trúc Subnet, máy ảo VM và các loại giao dịch (Transaction) nội bộ của hệ thống (P-Chain transactions).
+Công nghệ Container: Nghiên cứu về Docker Engine, Docker API và kỹ thuật để điều phối các tiến trình validator một cách tự động.
+Giao thức mạng và Giám sát: Nghiên cứu giao thức JSON-RPC cho tương tác Blockchain, TCP/IP cho giao tiếp P2P node-to-node, và giao thức thu thập dữ liệu time-series của Grafana/Prometheus.
+Phạm vi nghiên cứu
+Phạm vi của đề tài được giới hạn cụ thể để đảm bảo tính khả thi trong thời gian thực hiện dự án công nghệ:
+Không gian triển khai: Hệ thống được thiết kế và triển khai trên môi trường giả lập (Testnet) và mạng cục bộ (Localhost). Em không làm trực tiếp trên mạng Mainnet để tránh các chi phí giao dịch và rủi ro tài chính.
+Chức năng nghiệp vụ: Đề tài tập trung sâu vào các tác vụ quản trị cơ sở hạ tầng Blockchain Layer 1 . Dự án không đi sâu vào phát triển lớp ứng dụng Layer 2 Application.
+Dữ liệu giám sát: Các thông số giám sát được lưu trữ và hiển thị real-time ngắn hạn để phục vụ nhu cầu vận hành, chưa bao gồm phân tích dữ liệu hay Machine Learning.
+Phương pháp nghiên cứu
+Đề tài sử dụng kết hợp ba phương pháp nghiên cứu chính nhằm đảm bảo tính khoa học và thực tiễn: Phương pháp nghiên cứu tài liệu: Tổng hợp và phân tích nội dung từ Whitepaper của Avalanche [3], các tài liệu kỹ thuật từ Ava Labs, và các tài liệu và bài báo khoa học liên quan để xây dựng nền tảng lý thuyết vững chắc. Phương pháp thực nghiệm: Em tiến hành xây dựng các kịch bản thử nghiệm (Proof of Concept - PoC), triển khai thử trên môi trường local, phân tích lỗi để tinh chỉnh hệ thống. Việc thực nghiệm giúp kiểm tra sự phù hợp của các giải pháp công nghệ đã chọn. Phương pháp tìm hiểu sâu: Đọc và tìm hiểu các ý kiến trên các diễn đàn chính thống để giải quyết các vấn đề kỹ thuật phát sinh mà tài liệu chưa đề cập tới.
+Kết cấu của dự án
+Khóa luận được trình bày trong 6 chương với bố cục logic từ lý thuyết đến thực tiễn:
+Chương 1: Mở đầu. Trình bày bối cảnh, lý do chọn đề tài, mục tiêu và phạm vi nghiên cứu.
+Chương 2: Cơ sở lý thuyết và nền tảng công nghệ. Hệ thống hóa kiến thức về Blockchain Layer 1, giao thức đồng thuận Avalanche và công nghệ Docker.
+Chương 3: Phân tích và thiết kế hệ thống. Mô tả chi tiết yêu cầu người dùng, thiết kế kiến trúc tổng thể và mô hình dữ liệu.
+Chương 4: Hiện thực hóa và triển khai. Trình bày chi tiết quá trình phát triển, các giải pháp kỹ thuật cụ thể cho Backend và Frontend.
+Chương 5: Kiểm thử và đánh giá kết quả. Trình bày các kịch bản kiểm thử, kết quả đạt được và đánh giá ưu nhược điểm của hệ thống.
+Chương 6: Kết luận và hướng phát triển. Tổng kết đóng góp của dự án và đề xuất các mở rộng trong tương lai.
+Chương 2
+CƠ SỞ LÝ THUYẾT VÀ NỀN TẢNG CÔNG NGHỆ
+Tổng quan về Blockchain Layer 1
+Blockchain Layer 1 (Lớp 1) được định nghĩa là hạ tầng cơ sở của một mạng lưới phi tập trung, nơi diễn ra quá trình xác thực giao dịch, đạt được sự đồng thuận và lưu trữ dữ liệu cuối cùng. Đây là nền móng cho mọi ứng dụng phi tập trung (dApps) và các giải pháp mở rộng Layer 2 vận hành phía trên. Sự ổn định, bảo mật và phi tập trung của Layer 1 quyết định sự sống còn của toàn bộ hệ sinh thái Web3.
+Kiến trúc phân tầng của Blockchain
+Một hệ thống Blockchain điển hình không chỉ là là một chuỗi khối đơn nhất mà thường được chia thành các tầng logic chồng xếp lên nhau, mỗi tầng đảm nhiệm một chức năng riêng biệt:
+Infrastructure Layer (Tầng Hạ tầng): Đây là tầng vật lý thấp nhất, bao gồm phần cứng máy chủ, đường truyền mạng Internet và các node vật lý tham gia vào mạng lưới.
+Data Layer (Tầng Dữ liệu): Nơi định nghĩa cấu trúc dữ liệu cơ bản như Block (khối), Chain (chuỗi), Transaction (giao dịch), Merkle Tree và Digital Signature (chữ ký số).
+Network Layer (Tầng Mạng): Chịu trách nhiệm về giao thức truyền tin P2P (Peer-to-Peer), cơ chế phát hiện node (Node Discovery) và lan truyền block (Gossip Protocol).
+Consensus Layer (Tầng Đồng thuận): Đây là tầng quan trọng nhất, nơi các thuật toán đồng thuận như PoW, PoS hay BFT hoạt động để đảm bảo tính nhất quán và toàn vẹn của dữ liệu trên toàn mạng lưới phân tán.
+Application Layer (Tầng Ứng dụng): Là nơi các Smart Contracts, dApps và Wallets được triển khai và tương tác trực tiếp với người dùng cuối.
+Tam giác bất khả thi (The Blockchain Trilemma)
+Vitalik Buterin, người sáng lập Ethereum, đã khái quát hóa thách thức lớp nhất của Layer 1 qua mô hình "Tam giác bất khả thi". Định lý này khẳng định rằng một hệ thống phân tán khó có thể tối ưu hóa đồng thời cả ba thuộc tính mà chỉ có thể thoã mãn tối đa hai trong số đó:
+Decentralization (Phi tập trung): Mức độ phân tán quyền lực kiểm soát mạng lưới.
+Security (Bảo mật): Khả năng chống lại các cuộc tấn công chiếm quyền kiểm soát hoặc làm sai lệch dữ liệu.
+Scalability (Khả năng mở rộng): Khả năng xử lý lượng lớn giao dịch khi số lượng người dùng tăng lên.
+Các Blockchain thế hệ cũ thường phải đánh đổi. Ví dụ, Bitcoin chọn phi tập trung và bảo mật nhưng hy sinh khả năng mở rộng. Binance Smart Chain chọn Khả năng mở rộng nhưng hy sinh tính phi tập trung. Avalanche ra đời với tham vọng phá vỡ tam giác này bằng một cách tiếp cận hoàn toàn mới về đồng thuận Snowball kết hợp với kiến trúc Subnet.
+Phân tích giao thức đồng thuận
+Đồng thuận là trái tim của mọi hệ thống phân tán. Để làm nổi bật sự ưu việt của Avalanche, cần có sự so sánh chi tiết và khoa học với các thế hệ trước.
+Hình 2.1: Sự tiến hóa của các giao thức đồng thuận
+Sự tiến hóa của các giao thức
+Lịch sử phát triển của thuật toán đồng thuận có thể chia thành ba giai đoạn chính, tương ứng với ba cách tiếp cận khác nhau:
+Đồng thuận cổ điển (Classical Consensus)
+Dựa trên bài toán các vị tướng Byzantine (PBFT). Đặc điểm của giao thức này là dựa trên cơ chế bỏ phiếu, yêu cầu mọi node phải giao tiếp với tất cả các node khác.
+Ưu điểm: Đạt được độ chính xác tuyệt đối, quyết định tức thì và chi phí năng lượng thấp.
+Nhược điểm: Chi phí truyền tin là O(N2), nghĩa là khi số lượng node tăng lên, lượng truyền tin trao đổi tăng theo cấp số nhân. Do đó, mô hình này không thể mở rộng quá vài trăm node.
+Đồng thuận Nakamoto
+Tiêu biểu là Bitcoin với cơ chế Proof-of-Work (PoW). Khác với dòng cổ điển, Nakamoto Consensus dựa trên cơ chế xác suất.
+Ưu điểm: Cho phép các node không cần biết danh tính của nhau vẫn có thể tham gia mạng lưới (Permis- sionless), giải quyết tốt bài toán Scalability về số lượng node tham gia.
+Nhược điểm: Tiêu tốn năng lượng khủng khiếp để giải các bài toán hàm băm, và có thông lượng xử lý rất thấp do thời gian tạo block lâu.
+Đồng thuận Avalanche (Snow Family)
+Avalanche đại diện cho thế hệ thứ ba, kết hợp ưu điểm của cả hai dòng trên. Nó sử dụng cơ chế lấy mẫu ngẫu nhiên (Sub-sampling Voting) và sự lan truyền tin đồn (Gossip Algorithm). Thay vì phải hỏi ý kiến toàn bộ mạng lưới, một node trong Avalanche chỉ cần hỏi một tập con nhỏ ngẫu nhiên (k nodes). Quá trình này được lặp lại nhiều vòng, khiến trạng thái của toàn mạng lưới hội tụ cực nhanh về một kết quả duy nhất mà không tốn nhiều tài nguyên truyền tin. Độ phức tạp truyền tin chỉ là O(kN), cho phép mạng lưới mở rộng tới hàng triệu node.
+Bảng 2.1: So sánh đặc tính kỹ thuật các giao thức đồng thuận
+Thuộc tính
+Cổ điển (PBFT)
+Nakamoto (PoW)
+Avalanche
+Cơ chế
+Bỏ phiếu toàn mạng
+Giải toán (Mining)
+Lấy mẫu ngẫu nhiên (Gossip)
+Khả năng mở rộng
+Kém (< 100 nodes)
+Tốt (10, 000+ nodes)
+Rất tốt (Millions nodes)
+Tốc độ (TPS)
+Cao
+Thấp
+Rất cao
+Độ bền vững
+Phụ thuộc Leader
+Mạnh mẽ
+Mạnh mẽ
+Phân tích thuật toán Snowball
+Thuật toán Snowball là cốt lõi của họ giao thức Avalanche, bổ sung một số khái niệm mới như bộ nhớ memory và độ tin cậy confidenc để đảm bảo an toàn. Quy trình hoạt động của một node trong thuật toán Snowball có thể mô tả như sau:
+Khởi tạo bộ đếm tin cậy cho các trạng thái màu (ví dụ: Xanh/Đỏ) bằng 0.
+Chọn ngẫu nhiên k hàng xóm (sample size) từ danh sách validator.
+Hỏi ý kiến các hàng xóm này về trạng thái hiện tại.
+Nếu số phiếu của một màu (ví dụ: Xanh) vượt quá ngưỡng α (alpha):
+Cập nhật màu ưu tiên hiện tại thành Xanh.
+Tăng bộ đếm tin cậy của màu Xanh lên 1.
+Lặp lại quá trình lấy mẫu.
+Khi bộ đếm tin cậy của một màu vượt qua ngưỡng quyết định β (beta), node sẽ chính thức chốt trạng thái (Finalize/Accept) là màu đó.
+Với việc điều chỉnh tham số β , ta có thể đạt được xác suất an toàn tùy ý (ví dụ: 1 −ε với ε = 10−9), làm cho các cuộc tấn công đảo ngược giao dịch trở nên bất khả thi về mặt tính toán toán học.
+Kiến trúc hệ sinh thái Avalanche
+Avalanche không phải là một chuỗi khối đơn lẻ, mà là một mạng lưới các mạng lưới (Network of Networks), cho phép khả năng tùy biến vô hạn.
+Primary Network (Mạng chính)
+Mạng chính của Avalanche bao gồm 3 chuỗi tích hợp sẵn, được xác thực bởi cùng một tập Validator:
+Exchange Chain (X-Chain): Dùng để tạo và giao dịch tài sản số. Sử dụng cấu trúc dữ liệu DAG (Directed Acyclic Graph) để tối ưu hóa tốc độ và khả năng xử lý song song.
+Platform Chain (P-Chain): Là chuỗi metadata quản trị, nơi lưu trữ danh sách Validator, quản lý Subnet và thực hiện Staking. Đây là chuỗi quan trọng nhất đối với đề tài này vì mọi lệnh tạo, quản lý Subnet đều đi qua P-Chain.
+Contract Chain (C-Chain): Là một bản cài đặt của Ethereum Virtual Machine (EVM), cho phép chạy Smart Contracts viết bằng Solidity.
+Công nghệ Subnet
+Đây là thành phần quan trọng nhất liên quan đến đề tài nghiên cứu. Một Subnet (Sub-network) được định nghĩa là một tập hợp động các validators cùng làm việc để đạt đồng thuận cho một tập hợp các blockchains.
+Tính cô lập (Isolation): Hiệu năng của Subnet này không ảnh hưởng đến Subnet khác. Một game NFT hay một dApp tắc nghẽn sẽ không làm chậm các giao dịch tài chính trên Subnet khác.
+Tính chủ quyền (Sovereignty): Người tạo Subnet có toàn quyền đặt ra luật lệ riêng: yêu cầu phần cứng (RAM/CPU), yêu cầu định danh (KYC/AML), loại Token trả phí gas, và cơ chế thưởng phạt...
+Hình 2.2: Kiến trúc tổng quan hệ sinh thái Avalanche và vị trí của Subnet
+So sánh với các giải pháp quản trị Blockchain hiện có
+Để làm rõ tính cấp thiết và ưu điểm của hệ thống đề xuất, bảng dưới đây thực hiện so sánh giữa giải pháp dự án với các công cụ phổ biến hiện nay như Avalanche CLI, các công cụ DevOps (Terraform/Ansible) và giải pháp Managed Blockchain của AWS.
+Bảng 2.2: So sánh các giải pháp quản trị Blockchain
+Tiêu chí
+Avalanche CLI
+Terraform/Ansible
+AWS Managed BC
+Hệ thống đề xuất
+Giao diện đồ họa (GUI)
+Không
+Không
+Có
+Có
+Tự động hóa Subnet
+Thủ công
+Có
+Không
+Có
+Giám sát thời gian thực
+Không
+Không
+Có
+Có
+Phù hợp doanh nghiệp SME
+Không
+Không
+Không
+Có
+Chi phí triển khai
+Thấp
+Trung bình
+Cao
+Thấp
+Qua Bảng 2.2, có thể thấy hệ thống đề xuất giải quyết được bài toán về tính tiện dụng (GUI) và chi phí thấp, điều mà các giải pháp Enterprise lớn chưa tối ưu cho quy mô nhỏ.
+Công nghệ Container (Docker)
+Trong lĩnh vực Blockchain DevOps, tính nhất quán và khả năng thiết lập là rất quan trọng. Docker giải quyết các vấn đề này triệt để thông qua ba cơ chế:
+Environment Isolation (Cách ly môi trường): Mỗi validator node chạy trong một container riêng biệt với hệ thống file, thư viện và network namespace riêng. Điều này xóa bỏ hoàn toàn rủi ro xung đột phần mềm.
+Version Management (Quản lý phiên bản): Việc nâng cấp node hay rollback trở nên đơn giản chỉ bằng thao tác thay đổi tag image (vd: ‘avalanchego:v1.9‘ → ‘avalanchego:v1.10‘) và restart container.
+Resource Control (Kiểm soát tài nguyên): Docker cgroups cho phép giới hạn cứng tài nguyên CPU và RAM cho từng node, ngăn chặn nguy cơ một node bị tấn công DDoS hoặc memory leak làm treo cả hệ thống máy chủ vật lý.
+Kết luận chương
+Chương 2 đã cung cấp một nền tảng lý thuyết vững chắc và sâu sắc. Việc hiểu rõ cơ chế đồng thuận Snowball giúp lý giải tại sao Avalanche đạt được tốc độ cao và độ trễ thấp. Hiểu về kiến trúc Subnet và Docker là tiền đề để thiết kế hệ thống giao diện tự động và thân thiện ở chương sau. Sự kết hợp giữa lý thuyết toán học và công nghệ kỹ thuật chính là nền tảng vững chắc cho toàn bộ dự án, đảm bảo tính khả thi và hiệu quả của giải pháp đề xuất.
+Chương 3
+PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+Tổng quan về kịch bản thiết kế
+Hệ thống quản trị Blockchain Layer 1 là một hệ thống phần mềm rất phức tạp, đòi hỏi sự kết hợp chặt chẽ và đồng bộ giữa các thành phần giao diện người dùng (Frontend), logic nghiệp vụ (Backend) và hạ tầng hệ thống cơ sở Avalanche. Mục tiêu của giai đoạn thiết kế là chuyển hóa các yêu cầu nghiệp vụ trừu tượng ban đầu thành các mô hình kỹ thuật cụ thể, khả thi và tối ưu hóa cho việc phát triển.
+Phân tích yêu cầu
+Dựa trên khảo sát và kinh nghiệm thực tế quy trình vận hành thủ công của các node hiện tại, em đã tổng hợp và phân loại các yêu cầu hệ thống thành hai nhóm chính: yêu cầu chức năng và yêu cầu phi chức năng. Việc phân loại chi tiết giúp đảm bảo không bỏ sót bất kỳ khía cạnh quan trọng nào.
+Yêu cầu chức năng
+Hệ thống cần đáp ứng bốn nhóm nhiệm vụ cốt lõi sau đây:
+Nhóm chức năng Quản lý Mạng lưới (Network Manager)
+Đây là nhóm chức năng phục vụ việc khởi tạo và cấu hình các thông số cơ bản của Blockchain.
+Genesis Configuration: Hệ thống phải cung cấp giao diện từng bước trực quan để người dùng thiết lập các tham số Genesis như Chain ID, Token Symbol, Initial Supply và danh sách Genesis Validators.
+Subnet Deployment: Tự động hóa việc tạo ví, ký transaction ‘CreateSubnetTx‘ và gửi lên P-Chain.
+Blockchain Creation: Tự động hóa việc gửi transaction ‘CreateChainTx‘ để kích hoạt máy ảo (VM) trên Subnet vừa tạo.
+Nhóm chức năng Điều phối Node (Validator)
+Nhóm chức năng này chịu trách nhiệm quản lý các node.
+Node Provisioning: Tự động quản lý và điều phối thông tin node thông qua Docker.
+Lifecycle Management: Cung cấp các công cụ (Start, Stop, Restart, Delete) để quản lý container.
+Validator Management: Cung cấp giao diện trực quan thêm xoá sửa node, validator.
+Nhóm chức năng Giám sát và Cảnh báo (Monitoring & Alerting)
+Resource Monitoring: Thu thập real-time các chỉ số phần cứng: CPU usage, RAM usage, Disk I/O, Network Bandwidth.
+Consensus Monitoring: Theo dõi trạng thái đồng thuận Snowball, số lượng Peer kết nối, chiều cao Block (Block Height) và thời gian Finality .
+Alerting System: Gửi cảnh báo qua UI khi node bị crash hoặc tài nguyên vượt quá ngưỡng an toàn (vd: RAM > 90%).
+Nhóm chức năng Hệ thống và Bảo mật
+Authentication: Hỗ trợ đăng nhập đa phương thức: tài khoản/mật khẩu truyền thống và Web3 Login (Metamask/Core Wallet).
+Access Control (RBAC): Phân quyền rõ ràng giữa người dùng và admin hệ thống.
+Bảng 3.1: Bảng tổng hợp yêu cầu chức năng
+Tên Yêu cầu
+Độ ưu tiên
+Tạo mới Subnet
+Cao
+Thêm Validator Node (Docker)
+Cao
+Giám sát CPU/RAM Realtime
+Cao
+Quản lý User/Login
+Trung bình
+Export Node Identity
+Thấp
+Yêu cầu phi chức năng
+Bên cạnh các chức năng nghiệp vụ, hệ thống cũng phải thỏa mãn các tiêu chuẩn kỹ thuật khắt khe để đảm bảo trải nghiệm người dùng và tính ổn định.
+Hiệu năng (Performance): Dashboard phải đảm bảo hiển thị trạng thái node với độ trễ dưới 1 giây (Latency < 1s) thông qua kết nối WebSocket thời gian thực.
+Khả năng mở rộng (Scalability): Kiến trúc backend phải hỗ trợ quản lý tối thiểu 15 validator nodes trên một máy chủ vật lý tiêu chuẩn mà không bị tắc nghẽn.
+Tính tin cậy (Reliability): Hệ thống phải có cơ chế Health-check tự động, khả năng tự khôi phục (Auto- restart) khi tiến trình gặp lỗi crash bất ngờ.
+Khả năng sử dụng (Usability): Giao diện người dùng phải thân thiện, thao tác đơn giản dễ dàng.
+Thiết kế kiến trúc hệ thống
+Hệ thống được thiết kế tuân theo kiến trúc đơn giản hóa, bao gồm bốn tầng riêng biệt giao tiếp với nhau qua các giao thức chuẩn.
+Tầng Giao diện (Presentation Layer)
+Chịu trách nhiệm tương tác với người dùng, hiển thị dữ liệu và tiếp nhận lệnh. Được xây dựng trên framework
+**Next.js 14** (ReactJS) kết hợp với **TailwindCSS** để tạo giao diện hiện đại, responsive. Tầng này giao tiếp với Backend thông qua RESTful API và WebSocket.
+Tầng Ứng dụng (Application Layer)
+Đóng vai trò trung tâm xử lý logic nghiệp vụ. Sử dụng **NestJS** (Node.js framework) hoạt động như một Orchestrator. Các module chính bao gồm:
+Hình 3.1: Sơ đồ kiến trúc tổng thể hệ thống
+Auth Service: Xử lý xác thực.
+RPC Proxy Service: Cầu nối an toàn để giao tiếp với API của AvalancheGo.
+Docker Service: Điều khiển Docker.
+Task Queue: Hàng đợi xử lý các tác vụ tốn thời gian như download image hay sync blockchain.
+Tầng Dữ liệu (Data Layer)
+Đảm nhiệm việc lưu trữ bền vững.
+PostgreSQL: Lưu trữ dữ liệu quan hệ như thông tin người dùng, cấu hình Subnet, danh sách Node, lịch sử hoạt động.
+Prometheus: Cơ sở dữ liệu Time-series chuyên dụng để lưu trữ các metrics giám sát (CPU, RAM, TPS) với khả năng truy vấn cực nhanh.
+Tầng Hạ tầng (Infrastructure Layer)
+Bao gồm các thành phần hệ thống mức thấp.
+Docker Engine: Môi trường runtime để chạy các container.
+Avalanche Network: Mạng lưới các node P2P thực tế, nơi dữ liệu blockchain được đồng bộ và xác thực.
+Thiết kế cơ sở dữ liệu
+Cơ sở dữ liệu của hệ thống được thiết kế dựa trên mô hình quan hệ sử dụng PostgreSQL. Việc chuẩn hóa dữ liệu được thực hiện để đảm bảo tính toàn vẹn và tránh dư thừa.
+Bảng 3.2: Mô tả bảng Subnet
+Column
+Type
+Description
+id
+UUID
+Khóa chính
+subnet_id
+VARCHAR
+ID định danh trên Blockchain
+name
+VARCHAR
+Tên hiển thị của Subnet
+threshold
+INTEGER
+Ngưỡng chữ ký yêu cầu
+genesis_data
+JSONB
+Cấu hình khối Genesis chi tiết
+owner_id
+UUID
+Khóa ngoại tham chiếu bảng User
+Bảng 3.3: Mô tả bảng ValidatorNode
+Column
+Type
+Description
+id
+UUID
+Khóa chính
+container_id
+VARCHAR
+ID của Docker Container
+node_id
+VARCHAR
+NodeID (Format: Node-xxxxx)
+ip_address
+VARCHAR
+IP nội bộ của container
+api_port
+INTEGER
+Cổng RPC (Public port)
+p2p_port
+INTEGER
+Cổng P2P (Public port)
+status
+ENUM
+Trạng thái (RUNNING, STOPPED, ERROR)
+subnet_id
+UUID
+Node này thuộc về Subnet nào
+Thiết kế luồng hoạt động
+Quy trình khởi tạo Validator Node
+Quy trình khởi tạo Validator Node là quy trình phức tạp nhất và tiêu biểu nhất của hệ thống, đòi hỏi sự phối hợp nhịp nhàng giữa Backend, Database và Docker. Quy trình này bao gồm các bước tuần tự sau:
+User Request: Người dùng gửi yêu cầu thêm node mới với các tham số từ Frontend.
+Validation: Backend kiểm tra tính hợp lệ của dữ liệu đầu vào và kiểm tra tài nguyên hệ thống.
+Port Allocation: Service ‘PortAllocator‘ quét bảng ‘ValidatorNode‘ để tìm ra cặp cổng đang rảnh rỗi trên máy chủ vật lý, tránh xung đột.
+Config Generation: Hệ thống tự động sinh file ‘config.json‘ dựa trên template chuẩn, điền các thông số NetworkID và Bootstrap IPs.
+Container: Backend gọi API ‘createContainer‘ của Docker Engine. Tham số bao gồm Image ID, Port Binding và Volume Mapping.
+Monitoring Loop: Hệ thống bắt đầu một vòng lặp kiểm tra trạng thái container cho đến khi hoàn tất.
+Finalize: Cập nhật thông tin node mới vào cơ sở dữ liệu và cập nhật UI.
+Ngoài ra còn nhiều luồng hoạt động khác nhưng để phù hợp với phạm vi báo cáo, em xin phép nêu ra luồng điển hình.
+Kết luận chương
+Chương 3 đã hoàn thành việc phân nhỏ bài toán quản trị phức tạp thành các thành phần kỹ thuật cụ thể và mạch lạc. Bản thiết kế được trình bày trong chương này chính là cơ sở quan trọng để em thực hiện việc hiện thực hóa mã nguồn trong chương tiếp theo.
+Chương 4
+HIỆN THỰC HÓA Ý TƯỞNG VÀ TRIỂN KHAI HỆ THỐNG
+Công nghệ và môi trường phát triển
+Để đáp ứng các yêu cầu khắt khe về tính tương tác thời gian thực và kiến trúc đã đề ra ở chương trước, em đã cân nhắc kỹ lưỡng và lựa chọn các công nghệ hiện đại, phổ biến và mạnh mẽ.
+Back-end: NestJS. NestJS là một framework Node.js được xây dựng với tư duy kiến trúc Enterprise, hỗ trợ TypeScript mặc định. Lý do chính cho sự lựa chọn này là khả năng cung cấp cấu trúc module chặt chẽ, Dependency Injection (DI) mạnh mẽ giúp code dễ test và bảo trì. NestJS cũng tích hợp sẵn thư viện hỗ trợ WebSocket và Microservices, rất phù hợp với bài toán của dự án.
+Front-end: Next.js 14. Next.js được lựa chọn nhờ khả năng Server Side Rendering (SSR) và Static Site Generation (SSG), giúp tối ưu hóa tốc độ tải trang ban đầu và tốt cho SEO. Phiên bản 14 với App Router mang lại khả năng quản lý routing linh hoạt và hiệu năng cao.
+Database: PostgreSQL + Prisma ORM. Sự kết hợp này mang lại sự ổn định của một hệ quản trị CSDL quan hệ lâu đời (Postgres) cùng với sự tiện lợi, an toàn kiểu dữ liệu (Type-safety) của Prisma Client.
+DevOps: Docker Docker Compose. Đây là xương sống của hệ thống, giúp đóng gói ứng dụng và các node thành các đơn vị độc lập, dễ dàng triển khai trên bất kỳ môi trường nào hỗ trợ Docker.
+Cấu hình môi trường phát triển
+Môi trường phát triển và thử nghiệm được thiết lập trên một máy chủ cá nhân (Local Server) với cấu hình như sau:
+OS: Ubuntu 22.04 LTS . Hệ điều hành Linux được chọn vì khả năng tương thích native tốt nhất với Docker.
+CPU: Đảm bảo khả năng xử lý song song cho nhiều container.
+RAM: 12GB DDR4. Đủ dung lượng để chạy khoảng 10-15 validator nodes đồng thời (mỗi node tiêu tốn khoảng 500MB - 1GB RAM).
+Disk: 100G SSD. Việc sử dụng ổ cứng SSD tốc độ cao là yếu tố then chốt để đảm bảo hiệu năng nhập xuất dữ liệu (I/O) lớn đặc thù của blockchain, tránh hiện tượng tắc nghẽn khi đồng bộ, bootstrap network.
+Triển khai Backend (NestJS)
+Cấu trúc Module và kiến trúc phần mềm
+Mã nguồn Backend được em tổ chức theo kiến trúc tổ chức file rõ ràng nhằm đảm bảo tính mạch lạc, dễ quản lý và mở rộng. Hệ thống được chia thành các module chức năng chuyên biệt, mỗi module đóng gói toàn bộ logic liên quan đến một nhiệm vụ cụ thể. Các module chính bao gồm:
+SubnetModule: Quản lý các nghiệp vụ liên quan đến Blockchain Subnet như tạo mới, cấu hình whitelist, theo dõi trạng thái mạng.
+ValidatorModule: Module phức tạp nhất, quản lý node, container Docker, cấp phát tài nguyên và theo dõi sức khỏe node.
+MetricsModule: Xử lý việc thu thập, tổng hợp dữ liệu giám sát từ Prometheus và đẩy xuống client.
+Chi tiết thực hiện Module Validator
+Module Validator đóng vai trò là "Trái tim" của hệ thống. Tại đây, em giải quyết hai bài toán kỹ thuật khó: Quản lý cổng (Port Allocation) và Tương tác Docker (Docker Interaction).
+Thuật toán cấp phát cổng (Port Allocation)
+Mỗi node AvalancheGo khi khởi chạy yêu cầu 2 cổng TCP mở: một cho API JSON-RPC (mặc định 9650) và một cho giao tiếp P2P (mặc định 9651). Khi chạy nhiều node trên cùng một host IP, việc xung đột cổng là điều không thể tránh khỏi nếu không có quản lý. Em đã xây dựng một thuật toán "Scan & Reserve" hoạt động như sau: 1. Hệ thống duy trì một dải cổng khả dụng (Port Range), ví dụ từ 10000 đến 20000. 2. Khi cần tạo node mới, thuật toán sẽ quét trong DB để lấy danh sách các cổng đang được sử dụng. 3. Thuật toán tìm kiếm cặp số (p, p + 1) nhỏ nhất trong dải khả dụng mà chưa nằm trong danh sách đang sử dụng. 4. Cặp cổng này sẽ được đánh dấu trạng thái "Reserved" ngay lập tức để tránh xung đột nếu có nhiều request tạo node cùng lúc.
+Tương tác với Docker API
+Để điều khiển Docker từ mã nguồn Node.js, em sử dụng thư viện ‘dockerode‘. Đây là một thư viện mạnh mẽ cho phép giao tiếp trực tiếp với Docker Socket. Thay vì sử dụng Shell Exec để gọi lệnh CLI ‘docker run‘ (vốn thiếu an toàn và khó bắt lỗi), em sử dụng API object của ‘dockerode‘ để thực hiện các tác vụ:
+‘docker.createContainer()‘: Tạo container với cấu hình chi tiết.
+‘container.start()‘: Khởi động container.
+‘container.stats()‘: Lấy dữ liệu thống kê realtime (CPU/RAM).
+‘container.inspect()‘: Kiểm tra trạng thái của container (Exit Code, Health Status).
+Triển khai Frontend (Next.js)
+Thiết kế giao diện Dashboard (UI/UX)
+Giao diện người dùng được thiết kế với tiêu chí "Thông tin quan trọng nhất ở nơi dễ thấy nhất". Em sử dụng kiến trúc hướng Widget để xây dựng Dashboard. Giao diện chính được chia thành các khu vực:
+Sidebar: Menu điều hướng truy cập nhanh các chức năng: Dardboards, Nodes, Subnets, Validators.
+Top metrics bar: Hiển thị các chỉ số tổng quan của toàn mạng lưới: Tổng số Node (Active/Inactive), Tổng số Subnet, Block Hash.
+Main Datatable: Danh sách các Validator Node với đầy đủ thông tin: NodeID, IP, Version, Uptime. Bảng này hỗ trợ tính năng lọc, sắp xếp để đảm bảo hiệu năng khi danh sách node lớn.
+Hình 4.1: Giao diện Dashboard quản lý
+Cơ chế WebSocket Realtime
+Một trong những điểm nhấn của dự án là khả năng phản hồi thời gian thực. Để đạt được điều này, em đã loại bỏ hoàn toàn cơ chế Reload trang hoặc Polling truyền thống (gửi request liên tục gây tải server). Thay vào đó, em sử dụng công nghệ WebSocket. Luồng dữ liệu realtime hoạt động như sau: 1. **Backend Event:** Khi một tiến trình nền hoàn tất hoặc khi Prometheus báo về số liệu mới, Backend sẽ phát (emit) một sự kiện vào kênh (channel) tương ứng, ví dụ: ‘node-status-changed‘ hoặc ‘metrics-update‘. 2. **Frontend Listener:** Client duy trì một kết nối WS bền vững với Server và lắng nghe các kênh này. 3. **State Update:** Ngay khi nhận được sự kiện, Client sẽ cập nhật trực tiếp vào React State, khiến giao diện thay đổi tức thì mà không cần tải lại trang.
+Hệ thống Giám sát (Monitoring Stack)
+Cấu hình Grafana/Prometheus
+Trong môi trường Docker động, các container sinh ra và mất đi liên tục, địa chỉ IP của chúng cũng có thể thay đổi sau mỗi lần restart. Cấu hình giám sát IP tĩnh trong ‘prometheus.yml‘ là rất khó. Em giải quyết vấn đề này bằng cơ chế như sau.
+Backend, khi tạo/xóa node, sẽ ghi đè danh sách IP:PORT mới nhất vào một file JSON chia sẻ (‘tar- gets.json‘) nằm trong volume.
+Prometheus được cấu hình để ‘watch‘ file này. Mỗi khi file thay đổi, Prometheus tự động nạp lại danh sách mục tiêu vào bộ nhớ mà không cần restart service giám sát.
+Tích hợp Grafana Dashboard
+Grafana được sử dụng làm lớp hiển thị dữ liệu giám sát. Thay vì để người dùng phải tự cấu hình biểu đồ (một tác vụ khó), em sử dụng tính năng "Provisioning" của Grafana. Em đã thiết kế sẵn các file JSON Dashboard mẫu chứa các panel quan trọng:
+CPU/RAM Gauge:Đồng hồ đo mức tiêu thụ tài nguyên.
+Network Traffic Graph: Biểu đồ đường hiển thị lưu lượng mạng In/Out.
+Consensus Latency Heatmap: Biểu đồ nhiệt hiển thị độ trễ của các lượt bỏ phiếu Snowball.
+Khi container Grafana khởi chạy, nó tự động đọc các file này và tạo dashboard sẵn sàng sử dụng.
+Hình 4.2: Kiến trúc Monitoring Stack
+Layer1/
+backend/# Control Plane API (NestJS)
+benchmarks/# Load testing tools
+frontend/# Next.js
+infrastructure/# Subnet configs
+monitoring/# Prometheus & Grafana
+docker-compose.yml# Docker README.md
+Hình 4.3: Cấu trúc tổ chức mã nguồn dự án
+Kết luận chương
+Chương 4 đã trình bày chi tiết và trọng tâm về quá trình hiện thực hóa hệ thống. Việc kết hợp hài hoà giữa NestJS cho backend, Next.js cho frontend, Docker cho hạ tầng và Prometheus cho giám sát đã tạo nên một giải pháp công nghệ toàn diện và mạnh mẽ. Đây là nền tảng vững chắc để hệ thống vận hành ổn định trong thực tế.
+Chương 5
+KIỂM THỬ VÀ ĐÁNH GIÁ KẾT QUẢ
+Mục tiêu và phương pháp kiểm thử
+Chiến lược kiểm thử
+Quá trình kiểm thử là một phần không thể thiếu để đảm bảo chất lượng phần mềm. Đối với hệ thống phức tạp như dự án này, em áp dụng chiến lược kiểm thử đa tầng:
+Unit Testing (Kiểm thử đơn vị): Tập trung vào các hàm tiện ích nhỏ, các thuật toán độc lập (như thuật toán cấp phát cổng) để đảm bảo logic cơ bản đúng đắn.
+Integration Testing (Kiểm thử tích hợp): Kiểm tra sự tương tác giữa các module: Backend gọi Docker API có đúng không? Database có lưu đúng dữ liệu từ API không?
+System Testing (Kiểm thử hệ thống): Kiểm thử toàn bộ quy trình nghiệp vụ từ giao diện người dùng (Frontend) xuống đến hạ tầng Blockchain (End-to-End).
+Môi trường kiểm thử
+Hệ thống được triển khai và kiểm thử trên môi trường cục bộ (Local Environment/Testbed) mô phỏng một mạng lưới thu nhỏ:
+Hạ tầng: Docker Web Host chạy trên Laptop cá nhân (CPU 8 cores, RAM 12GB).
+Mạng: Docker Bridge Network ‘avalanche-net‘ (subnet 172.20.0.0/16) kết nối nội bộ giữa các container.
+Công cụ hỗ trợ: Docker Desktop Dashboard, Browser DevTools, và kịch bản test tự động bằng Script.
+Kịch bản Kiểm thử Chức năng
+Kịch bản 1: Quản lý Subnet
+Đây là chức năng quan trọng nhất, khởi tạo nền móng cho mạng blockchain.
+Mục tiêu: Xác minh luồng dữ liệu "Tạo Subnet" hoạt động chính xác từ UI xuống P-Chain.
+Dữ liệu đầu vào: Toàn bộ dữ liệu cần thiết.
+Các bước thực hiện:
+Truy cập "Subnets". Chọn Create Chain. Nhập thông tin.
+Submit form.
+Kết quả mong đợi:
+Backend hoạt động đúng và trả về các dữ liệu tương ứng từ Avalanche.
+Sau 1-2p, Subnet ID mới xuất hiện trong danh sách Subnets.
+Kịch bản 2: Vận hành Validator Node
+Kiểm tra khả năng quản lý Node của hệ thống đối với Docker Container.
+Mục tiêu: Đảm bảo các lệnh Start/Stop/Restart tác động đúng lên container tương ứng.
+Thao tác: Tại Validators, thực hiện các hành động: ‘Add Node‘ → ‘Delete Node‘.
+Kịch bản 3: Giám sát và Cảnh báo
+Mục tiêu là kiểm chứng độ phản hồi và độ chính xác của hệ thống giám sát. Chức năng này đã có nhưng vẫn đang trong giai đoạn sửa lỗi.
+Đánh giá hiệu năng hệ thống
+Em đã thực hiện đo đạc một số chỉ số cơ bản trên môi trường Local bằng công cụ K6 Grafana để đánh giá khả năng chịu tải của Backend.
+Đánh giá Sơ bộ và nhận xét
+Ưu điểm của hệ thống
+Tính tự động hóa cao (Automation): Đã loại bỏ 80% thao tác thủ công so với quy trình cũ. Người dùng không cần chạm vào dòng lệnh.
+Trải nghiệm người dùng tốt (UX): Giao diện trực quan, luồng hoạt động đúng, phản hồi nhanh.
+Kiến trúc gọn gàng (Architecture): Việc tách biệt Frontend - Backend - Database - Docker giúp hệ thống dễ bảo trì và mở rộng.
+Các vấn đề tồn tại và hạn chế
+Nhiều chức năng còn đang trong giai đoạn phát triển: Một số chức năng đã có như giám sát vẫn còn lỗi, chưa hoạt động với đầy đủ tính năng.
+Giới hạn tài nguyên host: Do chạy tất cả trên một máy Local nên việc triển khai thực tế có thể sẽ có một kết quả hoàn toàn khác, thậm chí dự án có thể không hoạt động đúng hoặc không hoạt động.
+Kết luận chương
+Các kết quả kiểm thử chức năng và hiệu năng cơ bản đã giúp dự án của em đáp ứng được một số yêu cầu đặt ra ở mức tối thiểu. Hệ thống hoạt động ổn định, giao diện thân thiện, dễ dàng tương tác, không gây ra sự khó chịu cho người dùng.
+Chương 6
+KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+Tổng kết các kết quả đạt được
+Thông qua quá trình nghiên cứu lý thuyết và thực hiện phát triển kỹ thuật, dự án "Nghiên cứu và xây dựng nền tảng quản trị mạng Blockchain Layer-1 hướng doanh nghiệp thông qua giao diện dựa trên Avalanche" đã hoàn thành cơ bản các mục tiêu cốt lõi đề ra ban đầu. Song do thời gian còn hạn chế và việc triển khai thực tế đề tài rất phức tạp nên dự án vẫn chưa thực sự hoàn thiện, nhiều chức năng có thể hoạt động chưa chuẩn xác theo lý thuyết. Em xin tổng kết lại các kết quả chính đã đạt được trên ba phương diện:
+Về mặt nghiên cứu khoa học
+Dự án đã hệ thống hóa thành công một tập hợp kiến thức phân tán và khá phức tạp về Blockchain Layer 1 hiện đại:
+Làm chủ lý thuyết đồng thuận: Đã phân tích cơ chế hoạt động của thuật toán Snowball, chứng minh được ưu thế về tốc độ và khả năng mở rộng của nó so với các thuật toán truyền thống.
+Phân tích kiến trúc Subnet: Đã làm rõ vai trò chiến lược của Subnet trong việc giải quyết bài toán tắc nghẽn của Ethereum, mở ra hướng đi cho các mạng Blockchain chuyên biệt.
+Về mặt sản phẩm công nghệ
+Kết quả cuối cùng quan trọng nhất của dự án là một hệ thống hoàn chỉnh, vận hành trơn tru:
+Dashboard quản trị toàn diện: Một hệ thống BaaS Dashboard cho phép người dùng Zero-coding expe- rience vẫn có thể thao tác quản trị phức tạp.
+Tự động hóa DevOps: Tích hợp thành công quy trình CI/CD cho Blockchain Node. Thời gian triển khai một Subnet mới giảm từ hàng giờ (thủ công) xuống còn dưới 5 phút.
+Hệ thống giám sát Realtime: Hiện thực hóa việc tích hợp Prometheus/Grafana với cơ chế Discovery động, mang lại khả năng quan sát (Observability) tức thì cho hệ thống. Tuy nhiên về mặt thực tế dự án chưa đạt được đầy đủ như những kỳ vọng nêu trên, còn nhiều lỗi và sai sót.
+Về mặt đóng góp cộng đồng
+Sản phẩm là một đóng góp nhỏ nhưng thiết thực vào hệ sinh thái cộng đồng Blockchain tại Việt Nam, cung cấp tài liệu tham khảo và mã nguồn mở cho mọi người dùng muốn tiếp cận công nghệ Web3.
+Ý nghĩa thực tiễn và khả năng ứng dụng
+Sản phẩm của dự án không chỉ dừng lại ở mức mô hình nghiên cứu mà hoàn toàn có khả năng ứng dụng vào thực tế với những giá trị to lớn:
+Đối với doanh nghiệp SME: Giúp họ triển khai mạng Blockchain riêng (Private/Permissoned Chain) để quản lý dữ liệu nội bộ với chi phí vận hành cực thấp, không cần thuê chuyên gia Blockchain đắt tiền.
+Đối với giáo dục và đào tạo: Là mã nguồn trực quan sinh động hỗ trợ môn học Blockchain tại các trường đại học, nơi mà sinh viên có thể dễ dàng tạo và quản lý chain.
+Đối với cộng đồng Web3 Startup: Là môi trường lý tưởng để phát triển và kiểm thử dApp nhanh chóng trước khi deploy lên testnet công khai.
+Những hạn chế còn tồn tại
+Với tinh thần nhìn nhận vào thực tế triển khai, em thẳng thắn chỉ ra những điểm hạn chế mà dự án chưa giải quyết:
+Bảo mật (Security): Em hoàn toàn chưa có kiểm thử về bảo mật hay bất kì một tiêu chí nào đảm bảo về vấn đề bảo mật trên, nếu triển khai public có thể sẽ có lỗ hổng.
+Hạ tầng (Infrastructure Agnostic): Hệ thống hiện phụ thuộc rất chặt chẽ vào Docker và mạng lưới Avalanche. Việc nâng cấp hay sửa đổi rất khó, khả năng tương thích với các môi trường hay hệ điều hành khác cũng rất hạn chế.
+Mức độ hoàn thiện tính năng: Các tính năng được triển khai ở mức cơ bản, một số tính năng chưa thực sự hoạt động đúng cách, đang trong giai đoạn phát triển.
+Hướng phát triển và Tầm nhìn tương lai
+Để phát triển dự án thành một sản phẩm hoàn thiện, em đề xuất lộ trình nghiên cứu tiếp theo (Roadmap) gồm 3 giai đoạn:
+Giai đoạn 1: Nâng cấp hoàn thiện hạ tầng Bảo mật
+Hoàn thiện và đảm bảo toàn bộ các chức năng hoạt động đúng.
+Cải thiện, kết hợp kiến trúc từ Docker Compose với các nền tảng khác để đảm bảo tính sẵn sàng cao và khả năng tự phục hồi.
+Tích hợp các giải pháp bảo mật.
+Giai đoạn 2: Mở rộng hệ sinh thái
+Xây dựng template Subnet: Nơi người dùng có thể chia sẻ và sử dụng lại các mẫu cấu hình Subnet tối ưu cho GameFi, DeFi, Enterprise...
+Tích hợp sẵn các bộ công cụ real-time về crypto, giao dịch, tin tức... để tra cứu giao dịch ngay trên Dashboard.
+Giai đoạn 3: Phân quyền quản trị
+Nghiên cứu cơ chế Governance DAO: Trao quyền quyết định các thông số mạng lưới cho cộng đồng người dùng thông qua Smart Contract, giảm bớt sự phụ thuộc vào Admin hệ thống.
+Lời kết
+Một lần nữa, qua dự án này, em muốn khẳng định sứ mệnh "Công nghệ Blockchain cho tất cả mọi người" mà mình theo đuổi. Em tin rằng, khi rào cản kỹ thuật được gỡ bỏ, sự sáng tạo sẽ được mở rộng. Em hy vọng những đóng góp nhỏ bé này sẽ là động lực hỗ trợ cộng đồng công nghệ Việt Nam nắm bắt nhanh chóng làn sóng Web3 và tự tin xây dựng những blockchain riêng cho mục đích của chính mình.
+Tài liệu tham khảo
+Vitalik Buterin et al. Ethereum: A next-generation smart contract and decentralized application platform.
+Whitepaper, 2014.
+Satoshi Nakamoto. Bitcoin: A peer-to-peer electronic cash system. Whitepaper, 2008.
+Team Rocket. Avalanche platform whitepaper. 2020.

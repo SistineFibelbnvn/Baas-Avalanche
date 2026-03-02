@@ -1,0 +1,151 @@
+\chapter{MỞ ĐẦU}
+
+\section{Đặt vấn đề}
+
+\subsection{Bối cảnh phát triển của công nghệ Blockchain}
+
+Kể từ khi bài báo nền tảng ``Bitcoin: A Peer-to-Peer Electronic Cash System'' được công bố vào năm 2008 bởi một cá nhân hoặc nhóm cá nhân sử dụng bút danh Satoshi Nakamoto \cite{nakamoto2008bitcoin}, công nghệ Blockchain đã trải qua nhiều giai đoạn phát triển đáng kể. Ở giai đoạn khởi đầu, Bitcoin với cơ chế đồng thuận Proof-of-Work (PoW) và ngôn ngữ kịch bản Script đơn giản chỉ cho phép thực hiện các giao dịch chuyển tiền cơ bản. Thiết kế này tuy đảm bảo tính bảo mật cao nhưng lại giới hạn nghiêm trọng về năng lực xử lý --- mạng Bitcoin chỉ có khả năng xử lý trung bình khoảng 7 giao dịch mỗi giây (TPS), một con số quá khiêm tốn so với các hệ thống thanh toán truyền thống như Visa với hàng chục nghìn TPS.
+
+Năm 2015, Vitalik Buterin giới thiệu Ethereum \cite{buterin2014ethereum} cùng khái niệm Hợp đồng thông minh (Smart Contract), mở ra kỷ nguyên mới cho các ứng dụng phi tập trung (dApps). Ethereum cho phép lập trình viên triển khai logic nghiệp vụ phức tạp trực tiếp trên chuỗi khối, tạo tiền đề cho sự bùng nổ của hệ sinh thái tài chính phi tập trung (DeFi), mã thông báo không thể thay thế (NFT) và các tổ chức tự trị phi tập trung (DAO). Tuy nhiên, khi số lượng người dùng và ứng dụng tăng nhanh, Ethereum nhanh chóng bộc lộ giới hạn về khả năng mở rộng. Trong giai đoạn cao điểm của ``DeFi Summer'' năm 2020 và ``NFT Boom'' năm 2021, phí giao dịch (gas fee) trên Ethereum có thời điểm vượt ngưỡng 200 USD cho một giao dịch đơn giản, khiến phần lớn người dùng cá nhân và doanh nghiệp vừa và nhỏ không thể tiếp cận.
+
+Vấn đề căn bản ẩn sau những hạn chế trên được giới học thuật gọi là ``Blockchain Scalability Trilemma'' --- bài toán ba mục tiêu khó đạt đồng thời: Phi tập trung (Decentralization), Bảo mật (Security) và Khả năng mở rộng (Scalability). Bất kỳ nền tảng Blockchain nào cũng phải đối mặt với sự đánh đổi giữa ba yếu tố này. Trong khi Bitcoin và Ethereum ưu tiên phi tập trung và bảo mật, giải pháp mở rộng bị hy sinh; ngược lại, các chuỗi như BSC hay Solana đạt tốc độ cao bằng cách giảm số lượng validator, từ đó giảm mức phi tập trung.
+
+\begin{table}[H]
+\centering
+\caption{So sánh các thế hệ nền tảng Blockchain}
+\label{tab:blockchain_generations}
+\begin{tabular}{|l|p{3.5cm}|p{3.5cm}|p{4.5cm}|}
+\hline
+\textbf{Tiêu chí} & \textbf{Thế hệ 1 (Bitcoin)} & \textbf{Thế hệ 2 (Ethereum)} & \textbf{Thế hệ 3 (Avalanche, Cosmos)} \\ \hline
+\textbf{Mục tiêu chính} & Lưu trữ giá trị, thanh toán ngang hàng & Hợp đồng thông minh, ứng dụng phân tán & Khả năng mở rộng, chuỗi ứng dụng riêng \\ \hline
+\textbf{Thông lượng} & $\sim$7 TPS & $\sim$15--30 TPS & 4.500+ TPS mỗi Subnet \\ \hline
+\textbf{Thời gian xác nhận} & $\sim$60 phút & $\sim$6 phút & $<$ 2 giây \\ \hline
+\textbf{Đồng thuận} & Proof-of-Work & Proof-of-Work $\rightarrow$ Proof-of-Stake & Snowball (dạng xác suất) \\ \hline
+\textbf{Tùy chỉnh} & Không & Hạn chế (chung một EVM) & Cao (mỗi Subnet có VM riêng) \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Xu hướng chuỗi ứng dụng chuyên biệt và Blockchain-as-a-Service}
+
+Để vượt qua giới hạn của mô hình ``một chuỗi dùng chung cho tất cả'', ngành công nghiệp Blockchain đã chuyển dịch mạnh mẽ sang mô hình mạng lưới đa chuỗi (Multi-chain) với các chuỗi ứng dụng chuyên biệt (Application-Specific Chains, viết tắt App-Chains). Trong mô hình này, mỗi ứng dụng hoặc nhóm ứng dụng sở hữu một chuỗi khối riêng được tối ưu hóa cho nhu cầu cụ thể --- ví dụ, một chuỗi chuyên xử lý giao dịch tài chính có thể cấu hình kích thước khối lớn hơn và thời gian tạo khối ngắn hơn so với một chuỗi lưu trữ NFT.
+
+Ba nền tảng tiêu biểu cho xu hướng này bao gồm:
+
+\begin{itemize}
+    \item \textbf{Cosmos} \cite{cosmos2019whitepaper} với kiến trúc Hub-Zone và giao thức Inter-Blockchain Communication (IBC), cho phép các chuỗi độc lập giao tiếp với nhau thông qua một trung tâm chuyển tiếp. Tuy nhiên, mỗi Zone phải tự vận hành bộ validator riêng, đòi hỏi vốn và tài nguyên đáng kể.
+
+    \item \textbf{Polkadot} \cite{polkadot2016whitepaper} với mô hình Relay Chain --- Parachain, trong đó các Parachain chia sẻ bảo mật từ Relay Chain trung tâm. Hạn chế lớn nhất của Polkadot là số lượng slot Parachain rất giới hạn (khoảng 100 slot) và chi phí đấu giá slot rất cao.
+
+    \item \textbf{Avalanche} \cite{avalabs2020platform} với kiến trúc Subnet, cho phép bất kỳ ai cũng có thể tạo một mạng Blockchain Layer 1 riêng biệt mà vẫn được hưởng lợi từ hệ sinh thái chung. Không giới hạn số lượng Subnet, chi phí tạo Subnet thấp hơn đáng kể so với Parachain trên Polkadot, và đặc biệt --- mỗi Subnet có thể tùy chỉnh hoàn toàn máy ảo (VM), cơ chế phí, tham số mạng theo nhu cầu riêng.
+\end{itemize}
+
+Song hành với xu hướng App-Chain, mô hình Blockchain-as-a-Service (BaaS) cũng đang thu hút sự quan tâm lớn từ thị trường doanh nghiệp. Các giải pháp BaaS của Amazon Web Services (Amazon Managed Blockchain), Microsoft Azure (Azure Blockchain Service) và Ava Labs (AvaCloud) đã chứng minh rằng nhu cầu ``thuê dùng'' hạ tầng Blockchain mà không cần am hiểu chuyên sâu về vận hành node là hoàn toàn có thực. Theo báo cáo của MarketsandMarkets \cite{marketsandmarkets2021baas}, thị trường BaaS toàn cầu được dự báo đạt giá trị 11,5 tỷ USD vào năm 2026, với tốc độ tăng trưởng kép hàng năm (CAGR) khoảng 62,2\%.
+
+\subsection{Thực trạng và thách thức kỹ thuật}
+
+Mặc dù công nghệ Avalanche Subnet mang lại tiềm năng đáng kể, rào cản kỹ thuật để tiếp cận vẫn còn khá cao đối với phần lớn người dùng và doanh nghiệp vừa và nhỏ. Em nhận thấy ba nhóm thách thức chính sau đây:
+
+\textbf{Thứ nhất}, về độ phức tạp trong triển khai: Quy trình khởi tạo một Avalanche Subnet đòi hỏi người vận hành phải thành thạo hàng chục lệnh CLI (Command Line Interface) theo một trình tự chặt chẽ. Cụ thể, người quản trị cần: (1)~cài đặt và cấu hình AvalancheGo node, (2)~tạo khóa điều khiển Subnet trên P-Chain, (3)~biên soạn file Genesis với đúng cấu trúc JSON, (4)~đăng ký VM tùy chỉnh, (5)~thêm validator vào Subnet thông qua giao dịch P-Chain, và (6)~đợi toàn bộ validator đồng bộ trước khi chuỗi mới có thể hoạt động. Một sai sót nhỏ ở bất kỳ bước nào --- ví dụ như timestamp trong Genesis không đồng bộ với thời gian mạng, hoặc cấu hình sai Chain ID --- đều có thể khiến Subnet không thể khởi động hoặc bị phân nhánh (fork) ngay từ đầu.
+
+\textbf{Thứ hai}, về khả năng giám sát: Các công cụ giám sát mặc định đi kèm AvalancheGo còn rất sơ khai. Người vận hành chủ yếu phải phân tích file log thô hoặc gọi trực tiếp các API JSON-RPC để kiểm tra trạng thái node. Chưa có một bảng điều khiển (dashboard) trực quan nào cung cấp cái nhìn tổng thể về sức khỏe mạng, trạng thái đồng thuận, hiệu suất giao dịch và phát hiện bất thường theo thời gian thực.
+
+\textbf{Thứ ba}, về chi phí nhân sự và vận hành: Duy trì một mạng lưới Blockchain ổn định 24/7 đòi hỏi đội ngũ kỹ sư DevOps có chuyên môn sâu với chi phí nhân sự đáng kể. Các tác vụ như nâng cấp phiên bản node, luân chuyển khóa bảo mật, sao lưu dữ liệu và xử lý sự cố thường được thực hiện thủ công, dẫn đến rủi ro lỗi do con người và thời gian ngưng hoạt động (downtime) không đáng có.
+
+Từ những thách thức thực tế trên, em nhận thấy nhu cầu cấp thiết về một nền tảng quản trị tập trung có khả năng tự động hóa quy trình triển khai, cung cấp giao diện trực quan để giám sát, và đơn giản hóa toàn bộ vòng đời vận hành Avalanche Subnet. Đây chính là động lực để em lựa chọn đề tài nghiên cứu này.
+
+\section{Mục tiêu và nhiệm vụ nghiên cứu}
+
+\subsection{Mục tiêu tổng quát}
+
+Mục tiêu của đề tài là nghiên cứu chuyên sâu kiến trúc Blockchain Layer 1 trên nền tảng Avalanche, đồng thời xây dựng một hệ thống phần mềm hoàn chỉnh (Platform) có khả năng đơn giản hóa toàn bộ quy trình khởi tạo, vận hành, giám sát và quản lý mạng Blockchain Layer 1 tùy chỉnh dựa trên công nghệ Avalanche Subnet.
+
+Hệ thống hướng tới việc trở thành một giải pháp Blockchain-as-a-Service (BaaS) tiêu chuẩn, giúp người dùng ở mọi trình độ kỹ thuật cũng có thể tiếp cận và vận hành mạng Blockchain riêng một cách dễ dàng thông qua giao diện web trực quan.
+
+\subsection{Mục tiêu cụ thể}
+
+Đề tài đặt ra năm mục tiêu cụ thể sau:
+
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{Nghiên cứu lý thuyết:} Phân tích chuyên sâu cơ chế đồng thuận Snowball/Snowflake, kiến trúc đa chuỗi (Primary Network, X-Chain, P-Chain, C-Chain), mô hình Subnet và cách thức hoạt động của máy ảo Subnet-EVM.
+
+    \item \textbf{Thiết kế kiến trúc hệ thống:} Xây dựng bản thiết kế kiến trúc phần mềm theo mô hình Modular Monolith với đầy đủ sơ đồ Use Case, Sequence Diagram, Entity-Relationship Diagram và đặc tả API RESTful.
+
+    \item \textbf{Hiện thực hóa sản phẩm:} Phát triển Backend Orchestrator (NestJS) tích hợp Docker API để quản lý vòng đời validator node; phát triển Frontend Dashboard (Next.js) với WebSocket cho giám sát thời gian thực; tích hợp Monitoring Stack (Prometheus/Grafana).
+
+    \item \textbf{Bảo mật và phân quyền:} Triển khai hệ thống xác thực JWT (JSON Web Token) và Google OAuth, kết hợp cơ chế phân quyền đảm bảo người dùng chỉ có thể quản lý tài nguyên Subnet thuộc sở hữu của mình.
+
+    \item \textbf{Kiểm thử và đánh giá:} Thực hiện kiểm thử chức năng, kiểm thử tích hợp trên môi trường Localnet, và đánh giá hiệu năng hệ thống dựa trên các kịch bản sử dụng thực tế.
+\end{enumerate}
+
+\section{Đối tượng và phạm vi nghiên cứu}
+
+\subsection{Đối tượng nghiên cứu}
+
+Đối tượng nghiên cứu chính của đề tài bao gồm bốn thành phần công nghệ cốt lõi:
+
+\begin{itemize}
+    \item \textbf{Nền tảng Blockchain Avalanche:} Tập trung vào phần mềm AvalancheGo (client chính thức), kiến trúc Subnet, máy ảo Subnet-EVM, các giao dịch nội bộ trên P-Chain (CreateSubnetTx, AddSubnetValidatorTx) và giao thức đồng thuận Snowball.
+
+    \item \textbf{Công nghệ ảo hóa container:} Nghiên cứu Docker Engine, Docker API v1.41+, kỹ thuật cách ly tiến trình thông qua Linux Namespace và Control Groups (cgroups), và mô hình Docker Bridge Network cho giao tiếp P2P giữa các validator node.
+
+    \item \textbf{Giao thức mạng và truyền thông:} JSON-RPC 2.0 cho tương tác với Blockchain node, WebSocket (Socket.IO) cho truyền dữ liệu giám sát thời gian thực từ server tới client, và RESTful API cho giao tiếp giữa Frontend và Backend.
+
+    \item \textbf{Hệ thống giám sát phân tán:} Prometheus cho thu thập và lưu trữ dữ liệu time-series, Grafana cho trực quan hóa dữ liệu, và cơ chế cảnh báo tự động (Alerting) khi phát hiện bất thường.
+\end{itemize}
+
+\subsection{Phạm vi nghiên cứu}
+
+Phạm vi của đề tài được xác định rõ ràng nhằm đảm bảo tính khả thi trong thời gian thực hiện khóa luận:
+
+\begin{itemize}
+    \item \textbf{Môi trường triển khai:} Hệ thống được thiết kế và kiểm thử trên môi trường mạng cục bộ (Localnet) thông qua Avalanche Network Runner và Docker. Đề tài không triển khai trên Mainnet để tránh chi phí giao dịch thực tế và rủi ro tài chính.
+
+    \item \textbf{Phạm vi chức năng:} Tập trung vào các tác vụ quản trị cơ sở hạ tầng (Infrastructure Management) ở tầng Layer 0/Layer 1, bao gồm: tạo/xóa Subnet, quản lý validator, giám sát node, triển khai Smart Contract cơ bản. Đề tài không đi sâu vào phát triển ứng dụng phi tập trung (dApp) ở tầng ứng dụng.
+
+    \item \textbf{Giới hạn dữ liệu:} Dữ liệu giám sát được lưu trữ dạng time-series phục vụ theo dõi vận hành tức thời (Operational Monitoring), chưa bao gồm phân tích dữ liệu dài hạn hay ứng dụng Machine Learning cho dự đoán sự cố.
+\end{itemize}
+
+\section{Phương pháp nghiên cứu}
+
+Đề tài kết hợp ba phương pháp nghiên cứu chính:
+
+\textbf{Phương pháp tổng quan tài liệu (Literature Review):} Em tiến hành thu thập, phân tích và hệ thống hóa kiến thức từ nhiều nguồn tài liệu đa dạng. Nguồn chính bao gồm bài báo Whitepaper của Avalanche \cite{rocket2020avalanche}, tài liệu kỹ thuật chính thức từ Ava Labs \cite{avalabs2023docs}, Ethereum Yellow Paper \cite{wood2014ethereum}, và các công trình nghiên cứu liên quan đến giao thức đồng thuận Byzantine Fault Tolerance \cite{lamport1982byzantine, castro1999practical}. Ngoài ra, em cũng tham khảo tài liệu từ Docker Inc. \cite{docker2023docs}, Prometheus Authors \cite{prometheus2023docs} và các dự án mã nguồn mở có liên quan trên GitHub.
+
+\textbf{Phương pháp thực nghiệm (Experimental Method):} Đây là phương pháp chủ đạo xuyên suốt quá trình thực hiện đề tài. Em tiến hành xây dựng các bản mẫu thử nghiệm (Proof of Concept), triển khai thử sai (Trial and Error) trên môi trường local, phân tích log lỗi từ AvalancheGo và Docker container để tìm ra cấu hình tối ưu. Quá trình thực nghiệm giúp kiểm chứng tính khả thi của từng giải pháp kỹ thuật, đồng thời phát hiện các vấn đề mà tài liệu lý thuyết chưa đề cập.
+
+\textbf{Phương pháp tham vấn chuyên gia (Expert Consultation):} Trong quá trình nghiên cứu, em thường xuyên trao đổi kỹ thuật trên kênh Discord chính thức của Ava Labs, diễn đàn StackOverflow, và theo dõi các Github Issues/Pull Requests của dự án AvalancheGo để nắm bắt các thay đổi mới nhất và giải quyết những vấn đề kỹ thuật phát sinh ngoài tài liệu.
+
+\section{Ý nghĩa khoa học và thực tiễn}
+
+\subsection{Ý nghĩa khoa học}
+
+Đề tài đóng góp vào lĩnh vực nghiên cứu Blockchain trên hai phương diện. Về mặt lý thuyết, khóa luận hệ thống hóa và phân tích chuyên sâu kiến trúc đa chuỗi của Avalanche, đặc biệt là cơ chế đồng thuận Snowball với mô hình toán học dựa trên chuỗi Markov --- một hướng tiếp cận khác biệt hoàn toàn so với các giao thức BFT truyền thống. Về mặt kỹ thuật, đề tài đề xuất một mô hình kiến trúc phần mềm tích hợp (Orchestrator Pattern) cho việc quản lý vòng đời container hóa của validator node, kết hợp WebSocket cho giám sát thời gian thực --- một mẫu thiết kế (design pattern) có thể được áp dụng cho các hệ thống quản trị hạ tầng phân tán tương tự.
+
+\subsection{Ý nghĩa thực tiễn}
+
+Sản phẩm phần mềm của đề tài giải quyết trực tiếp bài toán thực tế mà các tổ chức đang gặp phải khi muốn triển khai Blockchain riêng. Cụ thể:
+
+\begin{itemize}
+    \item Giảm thời gian triển khai một Subnet từ hàng giờ (thao tác CLI thủ công) xuống còn vài phút (thông qua giao diện web wizard).
+    \item Cung cấp bảng điều khiển giám sát trực quan, giúp người vận hành nắm bắt tình trạng mạng mà không cần đọc log file thô.
+    \item Tự động hóa các tác vụ DevOps repetitive như khởi động/dừng node, cấp phát port, thu thập metrics.
+    \item Có tiềm năng phát triển thành sản phẩm thương mại (SaaS) phục vụ thị trường Blockchain-as-a-Service đang tăng trưởng mạnh.
+\end{itemize}
+
+\section{Kết cấu của khóa luận}
+
+Khóa luận được trình bày trong 6 chương với bố cục logic đi từ lý thuyết nền tảng đến hiện thực hóa và đánh giá kết quả:
+
+\begin{itemize}
+    \item \textbf{Chương 1 --- Mở đầu:} Trình bày bối cảnh nghiên cứu, lý do chọn đề tài, mục tiêu, đối tượng, phạm vi và phương pháp nghiên cứu.
+
+    \item \textbf{Chương 2 --- Cơ sở lý thuyết và Nền tảng công nghệ:} Hệ thống hóa kiến thức về Blockchain Layer 1, kiến trúc Avalanche, giao thức đồng thuận Snowball, công nghệ Docker container hóa, và hệ thống giám sát Prometheus/Grafana.
+
+    \item \textbf{Chương 3 --- Phân tích và Thiết kế hệ thống:} Phân tích yêu cầu người dùng, thiết kế kiến trúc tổng thể, mô hình dữ liệu, sơ đồ UML và đặc tả API.
+
+    \item \textbf{Chương 4 --- Hiện thực hóa và Triển khai:} Trình bày chi tiết quá trình phát triển Backend, Frontend, cơ chế xác thực/phân quyền, và các giải thuật cốt lõi.
+
+    \item \textbf{Chương 5 --- Kiểm thử và Đánh giá kết quả:} Trình bày kịch bản kiểm thử, kết quả benchmark hiệu năng, và đánh giá tổng thể.
+
+    \item \textbf{Chương 6 --- Kết luận và Hướng phát triển:} Tổng kết đóng góp của đề tài và đề xuất các hướng nghiên cứu mở rộng.
+\end{itemize}

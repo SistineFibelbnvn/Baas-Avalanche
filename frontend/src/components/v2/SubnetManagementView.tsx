@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
   Network, Plus, Settings, Users, Zap, Lock, Globe, TrendingUp, Shield, GitBranch,
-  Loader2, AlertTriangle, RefreshCw, ExternalLink, Copy, X, Sparkles, Trash2
+  Loader2, AlertTriangle, RefreshCw, ExternalLink, Copy, X, Sparkles, Trash2, Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -357,7 +357,7 @@ export function SubnetManagementView() {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"

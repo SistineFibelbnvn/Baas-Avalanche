@@ -8,7 +8,6 @@ import { TopBar } from "@/components/v2/TopBar";
 import { ComprehensiveDashboard } from "@/components/v2/ComprehensiveDashboard";
 import { BlockchainLifecyclePanel } from "@/components/v2/BlockchainLifecyclePanel";
 import { NodesView } from "@/components/v2/NodesView";
-import { ToolboxView } from "@/components/v2/ToolboxView";
 import { MonitoringView } from "@/components/v2/MonitoringView";
 import { ValidatorsView } from "@/components/v2/ValidatorsView";
 import { ContractsView } from "@/components/v2/ContractsView";
@@ -16,8 +15,7 @@ import { SettingsView } from "@/components/v2/SettingsView";
 import { BlockExplorerView } from "@/components/v2/BlockExplorerView";
 import { ConfigurationView } from "@/components/v2/ConfigurationView";
 import { SubnetManagementView } from "@/components/v2/SubnetManagementView";
-import { NetworkTopologyView } from "@/components/v2/NetworkTopologyView";
-import { CrossChainBridgeView } from "@/components/v2/CrossChainBridgeView";
+
 import { CreateChainWizard } from "@/components/v2/CreateChainWizard";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -99,16 +97,10 @@ export default function Home() {
         return <ComprehensiveDashboard onCreateChain={() => setShowCreateChain(true)} onNavigate={setActiveView} />;
       case 'subnets':
         return <SubnetManagementView />;
-      case 'topology':
-        return <NetworkTopologyView />;
-      case 'bridge':
-        return <CrossChainBridgeView />;
       case 'explorer':
         return <BlockExplorerView />;
       case 'nodes':
         return <NodesView />;
-      case 'toolbox':
-        return <ToolboxView />;
       case 'validators':
         return <ValidatorsView />;
       case 'contracts':

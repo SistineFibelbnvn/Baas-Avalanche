@@ -78,9 +78,15 @@ export class ValidatorsService implements OnModuleInit {
   getPrometheusTargets() {
     const targets: any[] = [];
     this.portCache.forEach((port, nodeId) => {
+      // Route through backend metrics proxy instead of direct node port
+      // This avoids http-allowed-hosts restrictions on the Avalanche node
       targets.push({
-        targets: [`host.docker.internal:${port}`],
-        labels: { node: nodeId, job: 'avalanche-node' }
+        targets: ['host.docker.internal:4000'],
+        labels: {
+          __metrics_path__: `/monitoring/metrics/${port}`,
+          job: 'avalanche_node',
+          instance: `docker-${nodeId.slice(0, 12)}`,
+        }
       });
     });
     return targets;

@@ -65,7 +65,42 @@ export class CreateSubnetDto {
   genesisPath?: string;
 
   @IsOptional()
+  tokenName?: string;
+
+  @IsOptional()
   @IsString()
   ownerAddress?: string; // Wallet address of the owner
+
+  // Full genesis configuration generated on the frontend
+  @IsOptional()
+  genesisData?: Record<string, unknown>;
+
+  // Allowlist configurations
+  @IsOptional()
+  contractDeployerAllowlist?: {
+    enabled: boolean;
+    adminAddresses: string[];
+    managerAddresses: string[];
+    enabledAddresses: string[];
+  };
+
+  @IsOptional()
+  transactionAllowlist?: {
+    enabled: boolean;
+    adminAddresses: string[];
+    managerAddresses: string[];
+    enabledAddresses: string[];
+  };
+
+  @IsOptional()
+  feeManagerAllowlist?: {
+    enabled: boolean;
+    adminAddresses: string[];
+    managerAddresses: string[];
+    enabledAddresses: string[];
+  };
+
+  @IsOptional()
+  nativeMinter?: boolean;
 }
 

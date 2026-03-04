@@ -43,7 +43,7 @@ services:
 
   # Loki - Log Aggregation (like ELK but lightweight)
   loki:
-    image: grafana/loki:2.9.0
+    image: grafana/loki:3.0.0
     container_name: avalanche-loki
     ports:
       - "3100:3100"
@@ -55,7 +55,7 @@ services:
 
   # Promtail - Log Shipper to Loki
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:3.0.0
     container_name: avalanche-promtail
     volumes:
       - ./promtail/promtail-config.yml:/etc/promtail/config.yml
@@ -83,21 +83,19 @@ services:
     restart: unless-stopped
 
   # Node Exporter - System Metrics (CPU, Memory, Disk)
+  # NOTE: On Windows Docker Desktop, run with: docker compose --profile linux up -d
+  # Default docker compose up (no profile) will skip this service on Windows
   node-exporter:
     image: prom/node-exporter:latest
     container_name: avalanche-node-exporter
     ports:
       - "9100:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+    # Windows Docker Desktop compatible: no Linux-specific volume mounts
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--web.listen-address=:9100'
     restart: unless-stopped
+    profiles:
+      - linux
 
 volumes:
   prometheus-data:

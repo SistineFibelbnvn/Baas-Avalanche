@@ -141,17 +141,17 @@ export function TopBar({ theme, onThemeToggle }: TopBarProps) {
 
         {/* User info + Logout */}
         {user && (
-          <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-xs font-medium text-foreground">{user.name}</span>
-              <span className="text-[10px] text-muted-foreground">{user.email}</span>
+          <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border min-w-0">
+            <div className="hidden md:flex flex-col items-end min-w-0 max-w-[120px]">
+              <span className="text-xs font-medium text-foreground truncate w-full text-right">{user.name}</span>
+              <span className="text-[10px] text-muted-foreground truncate w-full text-right">{user.email}</span>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={logout}
               title="Sign out"
-              className="text-muted-foreground hover:text-red-500"
+              className="text-muted-foreground hover:text-red-500 flex-shrink-0"
             >
               <LogOut className="w-4 h-4" />
             </Button>

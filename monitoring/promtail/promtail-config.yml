@@ -9,10 +9,11 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Scrape Docker container logs via Docker Engine TCP (Windows Docker Desktop compatible)
+  # 1. Docker container logs discovery
+  # Uses mounted /var/run/docker.sock (from docker-compose volume mount)
   - job_name: containers
     docker_sd_configs:
-      - host: tcp://host.docker.internal:2375
+      - host: unix:///var/run/docker.sock
         refresh_interval: 5s
         filters:
           - name: status
@@ -28,32 +29,25 @@ scrape_configs:
       - target_label: job
         replacement: containerlogs
     pipeline_stages:
-      - json:
-          expressions:
-            level: level
-            message: msg
-            timestamp: time
-      - labels:
-          level:
+      - docker: {}
 
-  # Avalanche node containers
-  - job_name: avalanche
+  # 2. Monitoring stack containers (prometheus, grafana, loki, alertmanager)
+  - job_name: monitoring
     docker_sd_configs:
-      - host: tcp://host.docker.internal:2375
-        refresh_interval: 5s
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
         filters:
           - name: name
-            values: ["avax-*", "avalanche-cli"]
+            values: ["avalanche-prometheus", "avalanche-grafana", "avalanche-loki", "avalanche-alertmanager"]
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'
         target_label: container
       - target_label: job
-        replacement: avalanche
+        replacement: monitoring
     pipeline_stages:
-      - json:
-          expressions:
-            level: level
-            message: msg
-      - labels:
-          level:
+      - docker: {}
+
+  # 3. Backend application logs via HTTP push (push API)
+  # The NestJS backend can push logs to Loki via HTTP API
+  # No file scraping needed — the backend pushes directly

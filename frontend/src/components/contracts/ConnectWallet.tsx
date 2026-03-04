@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Wallet, LogOut, ChevronDown } from 'lucide-react';
+import { Wallet, LogOut, ChevronDown, Plus } from 'lucide-react';
 import { ethers } from 'ethers';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNetwork } from '@/context/NetworkContext';
 
 declare global {
     interface Window {
@@ -74,6 +75,10 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
     const [address, setAddress] = useState<string | null>(null);
     const [balance, setBalance] = useState<string>('0');
     const [isConnecting, setIsConnecting] = useState(false);
+    const { selectedNetwork } = useNetwork();
+
+    // Token symbol from selected network, fallback to AVAX
+    const tokenSymbol = selectedNetwork?.tokenSymbol || 'AVAX';
     // Track if user explicitly disconnected (persists to prevent auto-reconnect)
     const [isDisconnected, setIsDisconnected] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -212,6 +217,45 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
         localStorage.setItem('wallet-disconnected', 'true');
     }
 
+    // Add current network to MetaMask
+    async function addNetworkToMetaMask() {
+        if (!selectedNetwork || !window.ethereum) return;
+
+        // Skip for primary network (C-Chain already in MetaMask)
+        if (selectedNetwork.isPrimary) {
+            alert('C-Chain (Avalanche Primary) is already available in MetaMask.');
+            return;
+        }
+
+        if (!selectedNetwork.rpcUrl || !selectedNetwork.chainId) {
+            alert('Network RPC URL or Chain ID not available. Please ensure the subnet is running.');
+            return;
+        }
+
+        try {
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                    chainId: '0x' + Number(selectedNetwork.chainId).toString(16),
+                    chainName: selectedNetwork.name,
+                    rpcUrls: [selectedNetwork.rpcUrl],
+                    nativeCurrency: {
+                        name: selectedNetwork.tokenSymbol || 'TOKEN',
+                        symbol: selectedNetwork.tokenSymbol || 'TOKEN',
+                        decimals: 18,
+                    },
+                }],
+            });
+            alert(`Network "${selectedNetwork.name}" added to MetaMask successfully!`);
+        } catch (error: any) {
+            if (error?.code === 4001) {
+                // User rejected
+            } else {
+                alert(`Failed to add network: ${error?.message || 'Unknown error'}`);
+            }
+        }
+    }
+
     if (address) {
         return (
             <DropdownMenu>
@@ -220,7 +264,7 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
                         <Wallet className="h-4 w-4 text-primary" />
                         <span className="hidden md:inline font-mono">{address.substring(0, 6)}...{address.substring(address.length - 4)}</span>
                         <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px] font-normal hidden sm:inline-flex">
-                            {balance} AVAX
+                            {balance} {tokenSymbol}
                         </Badge>
                     </Button>
                 </DropdownMenuTrigger>
@@ -236,6 +280,12 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
                     }}>
                         Copy Address
                     </DropdownMenuItem>
+                    {selectedNetwork && !selectedNetwork.isPrimary && selectedNetwork.rpcUrl && (
+                        <DropdownMenuItem onClick={addNetworkToMetaMask} className="text-blue-500">
+                            <Plus className="mr-2 h-4 w-4" /> Add {selectedNetwork.name || 'Network'} to MetaMask
+                        </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={disconnect} className="text-red-500 mb-0.5">
                         <LogOut className="mr-2 h-4 w-4" /> Disconnect (Local)
                     </DropdownMenuItem>

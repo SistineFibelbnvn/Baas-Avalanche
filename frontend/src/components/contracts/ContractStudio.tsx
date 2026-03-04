@@ -49,6 +49,11 @@ export function ContractStudio() {
     const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
     const [sourceCode, setSourceCode] = useState("");
     const [isDeploying, setIsDeploying] = useState(false);
+    // Custom deploy
+    const [deployMode, setDeployMode] = useState<'template' | 'custom'>('template');
+    const [customAbi, setCustomAbi] = useState("");
+    const [customBytecode, setCustomBytecode] = useState("");
+    const [constructorArgs, setConstructorArgs] = useState("");
 
     // Interact State
     const [contracts, setContracts] = useState<DeployedContract[]>([]);
@@ -62,11 +67,10 @@ export function ContractStudio() {
         checkNetwork();
     }, [provider, selectedNetwork]);
 
-    // Auto-detect wallet connection on mount (since ConnectWallet is in Header)
+    // Auto-detect wallet + poll every 2s until connected (Header ConnectWallet sets wallet independently)
     useEffect(() => {
         const checkWalletConnection = async () => {
             if (typeof window !== 'undefined' && window.ethereum) {
-                // Polyfill listeners early
                 const eth = window.ethereum as any;
                 if (!eth.addListener && eth.on) eth.addListener = eth.on.bind(eth);
                 if (!eth.removeListener && eth.off) eth.removeListener = eth.off.bind(eth);
@@ -81,10 +85,6 @@ export function ContractStudio() {
                         setSigner(sig);
                         setAccount(addr);
                         refreshNetworks(addr);
-                    } else {
-                        setAccount(null);
-                        setSigner(null);
-                        refreshNetworks(undefined);
                     }
                 } catch (e) {
                     console.error("Wallet check failed", e);
@@ -93,9 +93,12 @@ export function ContractStudio() {
         };
         checkWalletConnection();
 
-        // Listen for account/chain changes with proper error handling
-        const handleChainChanged = () => window.location.reload();
+        // Poll every 2s until signer is set (handles Header ConnectWallet timing)
+        const poll = setInterval(() => {
+            if (!signer) checkWalletConnection();
+        }, 2000);
 
+        const handleChainChanged = () => window.location.reload();
         if (typeof window !== 'undefined' && window.ethereum) {
             try {
                 window.ethereum.on?.('accountsChanged', checkWalletConnection);
@@ -106,16 +109,34 @@ export function ContractStudio() {
         }
 
         return () => {
+            clearInterval(poll);
             if (typeof window !== 'undefined' && window.ethereum) {
                 try {
                     window.ethereum.removeListener?.('accountsChanged', checkWalletConnection);
                     window.ethereum.removeListener?.('chainChanged', handleChainChanged);
-                } catch (e) {
-                    // Ignore cleanup errors
-                }
+                } catch (e) { }
             }
         };
-    }, []);
+    }, [signer]);
+
+    // Manual connect fallback
+    const handleManualConnect = async () => {
+        if (!window.ethereum) return toast.error('No wallet found. Install MetaMask.');
+        try {
+            const prov = getSafeProvider();
+            if (!prov) return;
+            await prov.send('eth_requestAccounts', []);
+            const sig = await prov.getSigner();
+            const addr = await sig.getAddress();
+            setProvider(prov);
+            setSigner(sig);
+            setAccount(addr);
+            refreshNetworks(addr);
+            toast.success(`Connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`);
+        } catch (e: any) {
+            toast.error(e.message || 'Connection failed');
+        }
+    };
 
     const fetchContracts = async () => {
         if (!selectedNetwork) return;
@@ -163,22 +184,50 @@ export function ContractStudio() {
     const handleDeploy = async () => {
         if (!signer) return toast.error("Connect Wallet first!");
 
-        let abi, bytecode;
+        let abi: any, bytecode: string;
 
-        if (selectedTemplate !== null) {
+        if (deployMode === 'custom') {
+            // Custom deploy: user pasted ABI + bytecode
+            if (!customAbi.trim() || !customBytecode.trim()) {
+                return toast.error("Please provide both ABI and Bytecode");
+            }
+            try {
+                abi = JSON.parse(customAbi.trim());
+            } catch {
+                return toast.error("Invalid ABI JSON format");
+            }
+            bytecode = customBytecode.trim();
+            if (!bytecode.startsWith('0x')) bytecode = '0x' + bytecode;
+        } else {
+            // Template deploy
+            if (selectedTemplate === null) {
+                return toast.info("Please select a template or switch to Custom mode");
+            }
             abi = CONTRACT_TEMPLATES[selectedTemplate].abi;
             bytecode = CONTRACT_TEMPLATES[selectedTemplate].bytecode;
-        } else {
-            return toast.info("Please select a template (Custom compilation coming soon)");
+            if (!abi || !bytecode) {
+                return toast.error("This template requires compilation", {
+                    description: "Compile in Remix IDE, then use Custom mode to paste ABI + Bytecode."
+                });
+            }
         }
-
-        if (!abi || !bytecode) return toast.error("Invalid Contract Data");
 
         setIsDeploying(true);
         try {
             const factory = new ethers.ContractFactory(abi, bytecode, signer);
-            const contract = await factory.deploy();
+
+            // Parse constructor args if any
+            let args: any[] = [];
+            if (constructorArgs.trim()) {
+                try {
+                    args = JSON.parse(`[${constructorArgs.trim()}]`);
+                } catch {
+                    args = constructorArgs.split(',').map(a => a.trim()).filter(a => a);
+                }
+            }
+
             toast.info("Deploying...", { description: "Please confirm in your wallet" });
+            const contract = await factory.deploy(...args);
 
             await contract.waitForDeployment();
 
@@ -187,25 +236,25 @@ export function ContractStudio() {
 
             // Save to Backend
             await api.contracts.create({
-                name: contractName || (selectedTemplate !== null ? CONTRACT_TEMPLATES[selectedTemplate].name : "MyContract"),
+                name: contractName || (selectedTemplate !== null ? CONTRACT_TEMPLATES[selectedTemplate].name : "CustomContract"),
                 address,
                 subnetId: selectedNetwork?.id || 'primary',
                 abi,
                 txHash: txHash || '',
                 networkName: selectedNetwork?.name || 'Local',
                 chainId: selectedNetwork?.chainId,
-                rpcUrl: selectedNetwork?.rpcUrl, // Save RPC URL for backend
-                bytecode: "", // Optional to save
+                rpcUrl: selectedNetwork?.directRpcUrl || selectedNetwork?.rpcUrl,
+                bytecode: "",
                 ownerAddress: account!
             } as any);
 
-            toast.success("Deployed Successfully!");
+            toast.success(`Deployed at ${address.slice(0, 10)}...`);
             fetchContracts();
             setActiveTab('interact');
-            // Auto select new contract would be nice but requires knowing ID returned by create.
         } catch (e: any) {
             console.error(e);
-            toast.error("Deployment failed", { description: e.message });
+            const msg = e.reason || e.message || String(e);
+            toast.error("Deployment failed", { description: msg });
         } finally {
             setIsDeploying(false);
         }
@@ -308,6 +357,18 @@ export function ContractStudio() {
                         }</div>
                     </CardHeader>
                 </Card>
+                <Card>
+                    <CardHeader className="py-4">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Network</CardTitle>
+                        <div className="text-lg font-bold truncate">{selectedNetwork?.name || 'N/A'}</div>
+                    </CardHeader>
+                </Card>
+                <Card>
+                    <CardHeader className="py-4">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Connected Wallet</CardTitle>
+                        <div className="text-sm font-mono truncate">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not connected'}</div>
+                    </CardHeader>
+                </Card>
             </div>
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
@@ -322,44 +383,117 @@ export function ContractStudio() {
 
                 {/* DEPLOY TAB */}
                 <TabsContent value="deploy" className="mt-6 space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Templates List */}
-                        <Card className="lg:col-span-1">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <BookOpen className="h-5 w-5" /> Templates
-                                </CardTitle>
-                                <CardDescription>Select a starting point</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                {CONTRACT_TEMPLATES.map((tpl, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={() => {
-                                            setSelectedTemplate(idx);
-                                            setSourceCode(tpl.source);
-                                            setContractName(tpl.name);
-                                        }}
-                                        className={`p-3 rounded-lg border cursor-pointer transition-all hover:bg-muted ${selectedTemplate === idx
-                                            ? 'border-primary ring-1 ring-primary bg-primary/5'
-                                            : 'border-border'
-                                            }`}
-                                    >
-                                        <div className="font-medium mb-1">{tpl.name}</div>
-                                        <div className="text-xs text-muted-foreground">{tpl.description}</div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
+                    {/* Mode toggle: Template / Custom */}
+                    <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+                        <Button
+                            variant={deployMode === 'template' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setDeployMode('template')}
+                        >
+                            <BookOpen className="h-4 w-4 mr-2" /> Templates
+                        </Button>
+                        <Button
+                            variant={deployMode === 'custom' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setDeployMode('custom')}
+                        >
+                            <Code className="h-4 w-4 mr-2" /> Custom Contract
+                        </Button>
+                    </div>
 
-                        {/* Config & Deploy */}
-                        <Card className="lg:col-span-2 flex flex-col">
+                    {deployMode === 'template' ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Templates List */}
+                            <Card className="lg:col-span-1">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <BookOpen className="h-5 w-5" /> Templates
+                                    </CardTitle>
+                                    <CardDescription>Select a starting point</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                    {CONTRACT_TEMPLATES.map((tpl, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => {
+                                                setSelectedTemplate(idx);
+                                                setSourceCode(tpl.source);
+                                                setContractName(tpl.name);
+                                            }}
+                                            className={`p-3 rounded-lg border cursor-pointer transition-all hover:bg-muted ${selectedTemplate === idx
+                                                ? 'border-primary ring-1 ring-primary bg-primary/5'
+                                                : 'border-border'
+                                                }`}
+                                        >
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-medium">{tpl.name}</span>
+                                                {!tpl.bytecode && <Badge variant="outline" className="text-[9px] h-5">Needs Compile</Badge>}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">{tpl.description}</div>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+
+                            {/* Config & Deploy */}
+                            <Card className="lg:col-span-2 flex flex-col">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Code className="h-5 w-5" /> Contract Details
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4 flex-1">
+                                    <div className="space-y-2">
+                                        <Label>Contract Name</Label>
+                                        <Input
+                                            value={contractName}
+                                            onChange={e => setContractName(e.target.value)}
+                                            placeholder="MyContract"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label>Source Code Preview</Label>
+                                        <div className="relative flex-1 min-h-[250px] border rounded-md bg-muted/50">
+                                            <Textarea
+                                                value={sourceCode}
+                                                readOnly={true}
+                                                className="absolute inset-0 w-full h-full font-mono text-xs resize-none border-0 bg-transparent p-4 focus-visible:ring-0"
+                                                placeholder="// Select a template to view code..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Constructor Arguments <span className="text-muted-foreground text-xs">(comma-separated, optional)</span></Label>
+                                        <Input
+                                            value={constructorArgs}
+                                            onChange={e => setConstructorArgs(e.target.value)}
+                                            placeholder='e.g. 1000000, "MyToken"'
+                                            className="font-mono text-sm"
+                                        />
+                                    </div>
+
+                                    <Button className="w-full" size="lg" onClick={handleDeploy} disabled={isDeploying || !signer}>
+                                        {isDeploying ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="mr-2 h-4 w-4" />}
+                                        {isDeploying ? "Deploying..." : "Deploy to Network"}
+                                    </Button>
+                                    {!signer && (
+                                        <Button variant="outline" className="w-full" onClick={handleManualConnect}>
+                                            <Wifi className="mr-2 h-4 w-4" /> Connect Wallet to Deploy
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    ) : (
+                        /* CUSTOM DEPLOY MODE */
+                        <Card className="flex flex-col">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Code className="h-5 w-5" /> Contract Details
+                                    <Code className="h-5 w-5" /> Custom Contract Deploy
                                 </CardTitle>
+                                <CardDescription>Paste compiled ABI and Bytecode from Remix IDE, Hardhat, or Foundry</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4 flex-1">
+                            <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label>Contract Name</Label>
                                     <Input
@@ -368,31 +502,58 @@ export function ContractStudio() {
                                         placeholder="MyContract"
                                     />
                                 </div>
-                                <div className="space-y-2 flex-1 flex flex-col">
-                                    <Label>Source Code Preview</Label>
-                                    <div className="relative flex-1 min-h-[300px] border rounded-md bg-muted/50">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>ABI <span className="text-muted-foreground text-xs">(JSON array)</span></Label>
                                         <Textarea
-                                            value={sourceCode}
-                                            readOnly={true} // Read only for now until compilation service
-                                            className="absolute inset-0 w-full h-full font-mono text-xs resize-none border-0 bg-transparent p-4 focus-visible:ring-0"
-                                            placeholder="// Select a template to view code..."
+                                            value={customAbi}
+                                            onChange={e => setCustomAbi(e.target.value)}
+                                            placeholder='[{"inputs":[],"name":"myFunc","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"}]'
+                                            className="font-mono text-xs min-h-[200px]"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Bytecode <span className="text-muted-foreground text-xs">(hex, with or without 0x)</span></Label>
+                                        <Textarea
+                                            value={customBytecode}
+                                            onChange={e => setCustomBytecode(e.target.value)}
+                                            placeholder="0x608060405234801561001057600080fd5b50..."
+                                            className="font-mono text-xs min-h-[200px]"
                                         />
                                     </div>
                                 </div>
-
-                                <Button
-                                    className="w-full"
-                                    size="lg"
-                                    onClick={handleDeploy}
-                                    disabled={isDeploying || !signer}
-                                >
+                                <div className="space-y-2">
+                                    <Label>Constructor Arguments <span className="text-muted-foreground text-xs">(comma-separated, optional)</span></Label>
+                                    <Input
+                                        value={constructorArgs}
+                                        onChange={e => setConstructorArgs(e.target.value)}
+                                        placeholder='e.g. 1000000, "0xabc...", "TokenName"'
+                                        className="font-mono text-sm"
+                                    />
+                                </div>
+                                <Alert>
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle>How to get ABI & Bytecode</AlertTitle>
+                                    <AlertDescription className="text-xs">
+                                        1. Open <a href="https://remix.ethereum.org" target="_blank" className="underline text-primary">Remix IDE</a><br />
+                                        2. Write/paste your Solidity contract<br />
+                                        3. Compile → Copy ABI from "Compilation Details"<br />
+                                        4. Copy Bytecode (object field) from "Compilation Details"<br />
+                                        5. Paste both here and deploy!
+                                    </AlertDescription>
+                                </Alert>
+                                <Button className="w-full" size="lg" onClick={handleDeploy} disabled={isDeploying || !signer}>
                                     {isDeploying ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="mr-2 h-4 w-4" />}
-                                    {isDeploying ? "Deploying..." : "Deploy to Network"}
+                                    {isDeploying ? "Deploying..." : "Deploy Custom Contract"}
                                 </Button>
-                                {!signer && <p className="text-xs text-center text-muted-foreground">Please connect your wallet to deploy</p>}
+                                {!signer && (
+                                    <Button variant="outline" className="w-full" onClick={handleManualConnect}>
+                                        <Wifi className="mr-2 h-4 w-4" /> Connect Wallet to Deploy
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
-                    </div>
+                    )}
                 </TabsContent>
 
                 {/* INTERACT TAB */}
@@ -464,7 +625,9 @@ export function ContractStudio() {
                                     <CardContent className="p-6">
                                         <ContractInteraction
                                             contractId={selectedContractData.id}
+                                            contractAddress={selectedContractData.address}
                                             abi={selectedContractData.abi}
+                                            rpcUrl={selectedNetwork?.directRpcUrl || selectedNetwork?.rpcUrl}
                                         />
                                     </CardContent>
                                 </Card>

@@ -69,7 +69,7 @@ export function DashboardView({ loading = false, onCreateChain }: DashboardViewP
     },
     {
       title: 'Gas Price',
-      value: `${stats.gasPrice || '25'} nAVAX`,
+      value: `${parseInt(stats.gasPrice || '25', 10)} Gwei`,
       icon: Clock,
       iconColor: 'bg-purple-500'
     },

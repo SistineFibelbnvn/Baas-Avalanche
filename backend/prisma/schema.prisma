@@ -110,6 +110,7 @@ model Contract {
   abi         Json?
   bytecode    String?  @db.Text
   txHash      String?
+  rpcUrl      String?  // RPC URL of the network where contract is deployed
   
   // Network relation
   networkId   String

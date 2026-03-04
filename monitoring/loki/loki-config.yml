@@ -25,15 +25,6 @@ query_range:
 
 schema_config:
   configs:
-    # Legacy schema — kept for reading old data (if any)
-    - from: 2020-10-24
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
-      index:
-        prefix: index_
-        period: 24h
-    # New schema: tsdb v13 (Loki 2.8+ recommended)
     - from: 2024-01-01
       store: tsdb
       object_store: filesystem
@@ -43,10 +34,6 @@ schema_config:
         period: 24h
 
 storage_config:
-  boltdb_shipper:
-    active_index_directory: /loki/index
-    cache_location: /loki/cache
-    cache_ttl: 24h
   tsdb_shipper:
     active_index_directory: /loki/tsdb-index
     cache_location: /loki/tsdb-cache

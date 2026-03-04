@@ -10,6 +10,7 @@ export interface Network {
     name: string;
     chainId: number;
     rpcUrl: string;
+    directRpcUrl?: string; // Direct RPC URL (for ethers.js, not proxied)
     wsUrl?: string;
     tokenSymbol: string;
     status: "PENDING" | "DEPLOYING" | "CREATING" | "RUNNING" | "FAILED" | "DRAFT";
@@ -30,6 +31,7 @@ const PRIMARY_NETWORK: Network = {
     name: "Primary Network (C-Chain)",
     chainId: 43112, // Local C-Chain
     rpcUrl: `${PROXY_URL}/primary-c-chain`,
+    directRpcUrl: "http://127.0.0.1:9650/ext/bc/C/rpc",
     wsUrl: "ws://127.0.0.1:9650/ext/bc/C/ws", // WS might still need direct or proxying, but HTTP is priority
     tokenSymbol: "AVAX",
     status: "RUNNING",
@@ -81,7 +83,8 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
                     name: subnet.name,
                     chainId: subnet.chainId ? Number(subnet.chainId) : (subnet.config?.chainId || 0),
                     rpcUrl: `${PROXY_URL}/${subnet.id}`,
-                    tokenSymbol: subnet.config?.tokenSymbol || "TOKEN",
+                    directRpcUrl: subnet.rpcUrl || undefined, // Real RPC URL from backend (for ethers.js)
+                    tokenSymbol: subnet.tokenSymbol || subnet.config?.tokenSymbol || "TOKEN",
                     status: subnet.status,
                     vmType: subnet.vmType,
                     network: subnet.network,

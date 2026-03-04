@@ -28,7 +28,8 @@ import {
     GenesisFormData,
     defaultGenesisFormData,
     defaultFeeConfig,
-    TokenAllocation
+    TokenAllocation,
+    generateGenesisConfig,
 } from '@/lib/genesisGenerator';
 
 // Wizard steps
@@ -182,13 +183,38 @@ export function EnhancedSubnetWizard({ open, onOpenChange }: EnhancedSubnetWizar
 
         setCreating(true);
         try {
+            // Generate full genesis configuration from form data
+            const genesisConfig = generateGenesisConfig(formData);
+
             await api.subnets.create({
                 name: formData.name,
                 vmType: 'subnet-evm',
                 chainId: parseInt(formData.chainId),
                 tokenSymbol: formData.tokenSymbol,
+                tokenName: formData.tokenName,
                 validatorType: 'poa',
                 enableICM: formData.predeploys.icmMessenger,
+                // Fee config
+                gasLimit: formData.feeConfig.gasLimit,
+                minBaseFee: String(formData.feeConfig.minBaseFee * 1e9), // gwei → wei
+                targetBlockRate: formData.feeConfig.targetBlockRate,
+                // Token supply from allocations
+                tokenSupply: formData.allocations.length > 0
+                    ? String(formData.allocations.reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0))
+                    : undefined,
+                // Full genesis config (allocations + allowlists + predeploys)
+                genesisData: genesisConfig as Record<string, unknown>,
+                // Allowlist data
+                contractDeployerAllowlist: formData.contractDeployerAllowlist.enabled
+                    ? formData.contractDeployerAllowlist
+                    : undefined,
+                transactionAllowlist: formData.transactionAllowlist.enabled
+                    ? formData.transactionAllowlist
+                    : undefined,
+                feeManagerAllowlist: formData.feeManagerAllowlist.enabled
+                    ? formData.feeManagerAllowlist
+                    : undefined,
+                nativeMinter: formData.nativeMinter,
             });
 
             toast.success('Subnet creation started!', {

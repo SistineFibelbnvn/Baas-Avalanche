@@ -378,21 +378,15 @@
             "targets": [
                 {
                     "datasource": "Prometheus",
-                    "expr": "avalanche_C_blks_accepted_count{instance=~\"$instance\"}",
-                    "legendFormat": "C-Chain Blocks - {{instance}}",
+                    "expr": "sum by(instance) (avalanche_C_blks_accepted_count{instance=~\"$instance\"}) or sum by(instance) (avalanche_X_blks_accepted_count{instance=~\"$instance\"}) or sum by(instance) (avalanche_P_blks_accepted_count{instance=~\"$instance\"})",
+                    "legendFormat": "Blocks - {{instance}}",
                     "refId": "A"
                 },
                 {
                     "datasource": "Prometheus",
-                    "expr": "avalanche_X_blks_accepted_count{instance=~\"$instance\"}",
-                    "legendFormat": "X-Chain Blocks - {{instance}}",
+                    "expr": "sum by(instance) ({__name__=~\"avalanche_.*_blks_accepted_count\", instance=~\"$instance\"})",
+                    "legendFormat": "All Chains - {{instance}}",
                     "refId": "B"
-                },
-                {
-                    "datasource": "Prometheus",
-                    "expr": "avalanche_P_blks_accepted_count{instance=~\"$instance\"}",
-                    "legendFormat": "P-Chain Blocks - {{instance}}",
-                    "refId": "C"
                 }
             ],
             "title": "Accepted Blocks",
@@ -419,14 +413,14 @@
             "targets": [
                 {
                     "datasource": "Prometheus",
-                    "expr": "rate(avalanche_C_handler_get_accepted_frontier_sum{instance=~\"$instance\"}[5m])",
-                    "legendFormat": "Handler Frontier - {{instance}}",
+                    "expr": "rate(avalanche_C_vm_eth_rpc_handler_calls_count{instance=~\"$instance\"}[5m])",
+                    "legendFormat": "ETH RPC - {{instance}}",
                     "refId": "A"
                 },
                 {
                     "datasource": "Prometheus",
-                    "expr": "rate(avalanche_C_vm_eth_rpc_handler_calls_count{instance=~\"$instance\"}[5m])",
-                    "legendFormat": "ETH RPC Calls - {{instance}}",
+                    "expr": "sum by(instance) (rate({__name__=~\"avalanche_.*_handler_.*_count\", instance=~\"$instance\"}[5m]))",
+                    "legendFormat": "All Handlers - {{instance}}",
                     "refId": "B"
                 }
             ],
@@ -434,7 +428,6 @@
             "type": "timeseries"
         },
         {
-            "collapsed": false,
             "gridPos": {
                 "h": 1,
                 "w": 24,
@@ -586,7 +579,7 @@
             "targets": [
                 {
                     "datasource": "Prometheus",
-                    "expr": "1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})",
+                    "expr": "1 - (node_filesystem_avail_bytes{job=\"node-exporter\"} / node_filesystem_size_bytes{job=\"node-exporter\"})",
                     "legendFormat": "Disk Used",
                     "refId": "A"
                 }

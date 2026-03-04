@@ -9,7 +9,7 @@ export interface DeployedContract {
     address: string;
     subnetId: string; // 'primary' or subnet ID
     ownerAddress?: string; // Wallet address of the owner
-    rpcUrl?: string;
+    rpcUrl?: string; // RPC URL of the network where contract is deployed
     abi: any[];
     deployedAt: string;
     txHash: string;
@@ -53,6 +53,7 @@ export class ContractsService implements OnModuleInit {
                 address: c.address,
                 subnetId: c.networkId,
                 ownerAddress: c.deployedBy || undefined,
+                rpcUrl: c.rpcUrl || undefined,
                 abi: c.abi || [],
                 deployedAt: c.deployedAt.toISOString(),
                 txHash: c.txHash || ''
@@ -115,6 +116,7 @@ export class ContractsService implements OnModuleInit {
                     txHash: newContract.txHash,
                     networkId: networkId,
                     deployedBy: newContract.ownerAddress,
+                    rpcUrl: newContract.rpcUrl || null,
                     deployedAt: newContract.deployedAt
                 } as any
             });
@@ -202,19 +204,102 @@ export class ContractsService implements OnModuleInit {
         }
     }
 
+    // Resolve the real RPC URL for a contract (handles legacy contracts with null/proxy URLs)
+    private async resolveRpcUrl(contractData: DeployedContract): Promise<string> {
+        // Special case: primary network
+        if (!contractData.subnetId || contractData.subnetId === 'primary' || contractData.subnetId === 'primary-c-chain') {
+            return 'http://127.0.0.1:9650/ext/bc/C/rpc';
+        }
+
+        // If stored rpcUrl looks like a real RPC URL, verify contract exists there
+        if (contractData.rpcUrl && !contractData.rpcUrl.includes('/rpc/proxy/') && contractData.rpcUrl.includes('/ext/bc/')) {
+            if (await this.contractExistsAt(contractData.address, contractData.rpcUrl)) {
+                return contractData.rpcUrl;
+            }
+            this.logger.warn(`Contract ${contractData.address} NOT found at stored rpcUrl ${contractData.rpcUrl}`);
+        }
+
+        // Fallback 1: look up Network table by subnetId
+        try {
+            const network = await (this.prisma as any).network.findUnique({
+                where: { id: contractData.subnetId },
+                select: { rpcUrl: true, name: true }
+            });
+            if (network?.rpcUrl && await this.contractExistsAt(contractData.address, network.rpcUrl)) {
+                contractData.rpcUrl = network.rpcUrl;
+                this.logger.log(`Found contract at Network "${network.name}": ${network.rpcUrl}`);
+                return network.rpcUrl;
+            }
+        } catch (e) { /* ignore */ }
+
+        // Fallback 2: search ALL networks with rpcUrl
+        try {
+            const allNetworks = await (this.prisma as any).network.findMany({
+                where: { rpcUrl: { not: null }, status: 'RUNNING' },
+                select: { id: true, rpcUrl: true, name: true }
+            });
+            for (const net of allNetworks) {
+                if (net.rpcUrl && await this.contractExistsAt(contractData.address, net.rpcUrl)) {
+                    contractData.rpcUrl = net.rpcUrl;
+                    contractData.subnetId = net.id;
+                    this.logger.log(`Auto-discovered contract at Network "${net.name}": ${net.rpcUrl}`);
+                    // Update DB
+                    try {
+                        await (this.prisma as any).contract.update({
+                            where: { id: contractData.id },
+                            data: { rpcUrl: net.rpcUrl, networkId: net.id }
+                        });
+                    } catch (e) { /* ignore update errors */ }
+                    return net.rpcUrl;
+                }
+            }
+        } catch (e) {
+            this.logger.warn(`Network search failed: ${e}`);
+        }
+
+        // Fallback 3: try C-Chain
+        const cChainUrl = 'http://127.0.0.1:9650/ext/bc/C/rpc';
+        if (await this.contractExistsAt(contractData.address, cChainUrl)) {
+            return cChainUrl;
+        }
+
+        this.logger.error(`Contract ${contractData.address} not found on ANY network!`);
+        return cChainUrl; // Return C-Chain anyway, let ethers throw a descriptive error
+    }
+
+    // Check if a contract exists at the given address on the given RPC URL
+    private async contractExistsAt(address: string, rpcUrl: string): Promise<boolean> {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
+            const res = await fetch(rpcUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jsonrpc: '2.0', id: 1,
+                    method: 'eth_getCode',
+                    params: [address, 'latest']
+                }),
+                signal: controller.signal,
+            });
+            clearTimeout(timeout);
+            if (!res.ok) return false;
+            const data = await res.json();
+            return data.result && data.result !== '0x' && data.result.length > 2;
+        } catch {
+            return false;
+        }
+    }
+
     async readContract(id: string, method: string, args: any[]) {
         const contractData = this.contracts.find(c => c.id === id);
         if (!contractData) throw new Error('Contract not found');
 
         const { ethers } = await import('ethers');
-        // Resolve RPC URL
-        let rpcUrl = 'http://127.0.0.1:9650/ext/bc/C/rpc';
-        if (contractData.subnetId && contractData.subnetId.startsWith('http')) {
-            rpcUrl = contractData.subnetId;
-        }
+        const rpcUrl = await this.resolveRpcUrl(contractData);
 
         if (!await this.isRpcReachable(rpcUrl)) {
-            throw new Error('Avalanche node is offline. Cannot read contract.');
+            throw new Error(`Node is offline at ${rpcUrl}. Cannot read contract.`);
         }
         const provider = new ethers.JsonRpcProvider(rpcUrl);
         const contract = new ethers.Contract(contractData.address, contractData.abi, provider);
@@ -230,26 +315,37 @@ export class ContractsService implements OnModuleInit {
 
     async writeContract(id: string, method: string, args: any[]) {
         const release = await this.deployMutex.acquire();
+        let rpcUrl = 'unknown';
+        let contractData: DeployedContract | undefined;
         try {
-            const contractData = this.contracts.find(c => c.id === id);
+            contractData = this.contracts.find(c => c.id === id);
             if (!contractData) throw new Error('Contract not found');
 
             const { ethers } = await import('ethers');
-            // Resolve RPC URL
-            let rpcUrl = 'http://127.0.0.1:9650/ext/bc/C/rpc';
-            if (contractData.subnetId && contractData.subnetId.startsWith('http')) {
-                rpcUrl = contractData.subnetId;
-            }
+            rpcUrl = await this.resolveRpcUrl(contractData);
+            this.logger.log(`WRITE ${method} on contract ${contractData.address} via RPC: ${rpcUrl} (subnetId: ${contractData.subnetId})`);
 
             const PRIVATE_KEY = process.env.PRIVATE_KEY || '56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027';
             if (!await this.isRpcReachable(rpcUrl)) {
-                throw new Error('Avalanche node is offline. Cannot write to contract.');
+                throw new Error(`Node is offline at ${rpcUrl}. Cannot write to contract.`);
             }
             const provider = new ethers.JsonRpcProvider(rpcUrl);
             const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
             const contract = new ethers.Contract(contractData.address, contractData.abi, wallet);
 
-            const tx = await contract[method](...(args || []));
+            // Try normal call first, fallback to manual gasLimit if estimateGas fails
+            let tx;
+            try {
+                tx = await contract[method](...(args || []));
+            } catch (estimateErr: any) {
+                if (estimateErr.code === 'CALL_EXCEPTION' && estimateErr.message?.includes('estimateGas')) {
+                    this.logger.warn(`estimateGas failed, retrying with manual gasLimit: ${estimateErr.message}`);
+                    // Bypass estimateGas by setting gasLimit manually
+                    tx = await contract[method](...(args || []), { gasLimit: 500000n });
+                } else {
+                    throw estimateErr;
+                }
+            }
             const receipt = await tx.wait();
 
             return {
@@ -258,7 +354,7 @@ export class ContractsService implements OnModuleInit {
                 status: receipt.status
             };
         } catch (e: any) {
-            throw new Error(`Write failed: ${e.message}`);
+            throw new Error(`Write failed [rpc=${rpcUrl}, subnet=${contractData?.subnetId}]: ${e.message}`);
         } finally {
             release();
         }

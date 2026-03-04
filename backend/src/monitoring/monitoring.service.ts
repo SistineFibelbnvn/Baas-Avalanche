@@ -97,7 +97,7 @@ export class MonitoringService {
                 status: isRunning ? 'RUNNING' : 'STOPPED',
                 grafanaUrl: grafanaRunning ? 'http://localhost:3010' : null,
                 prometheusUrl: prometheusRunning ? 'http://localhost:9090' : null,
-                lokiUrl: lokiRunning ? 'http://localhost:3100' : null,
+                lokiUrl: lokiRunning ? 'http://localhost:3010/explore?schemaVersion=1&panes=%7B%22__default%22:%7B%22datasource%22:%22Loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22datasource%22:%7B%22type%22:%22loki%22,%22uid%22:%22Loki%22%7D%7D%5D%7D%7D&orgId=1' : null,
                 alertmanagerUrl: alertmanagerRunning ? 'http://localhost:9093' : null,
                 services: services.map((s: any) => ({
                     name: s.Name || s.Service,

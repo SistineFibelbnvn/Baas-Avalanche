@@ -59,7 +59,8 @@ export class MonitoringController {
     async getMetricsProxy(@Param('port') port: string, @Res() res: Response) {
         const http = require('http');
         const targetPort = parseInt(port) || 9650;
-        const isStaticPort = targetPort >= 9650 && targetPort <= 9660;
+        // Avalanche CLI uses ports 9650-9699 for nodes (primary + subnets)
+        const isStaticPort = targetPort >= 9650 && targetPort <= 9699;
         const isDynamicPort = targetPort >= 10000 && targetPort <= 30000;
         if (!isStaticPort && !isDynamicPort) {
             res.status(400).send('Invalid port');
@@ -77,19 +78,22 @@ export class MonitoringController {
             });
 
             // Validate: Prometheus text format starts with '#' or metric lines
-            // If it looks like a JSON error, return 503 comment instead
+            // If response is not valid Prometheus format (e.g. JSON error), return HTTP 200
+            // with a comment so Prometheus marks target as UP but shows no data (not DOWN with parse error)
             const trimmed = data.trim();
             const isValidPrometheus = trimmed.startsWith('#') || /^[a-zA-Z_]/.test(trimmed);
             if (!isValidPrometheus) {
-                res.status(503).set('Content-Type', 'text/plain; charset=utf-8')
-                    .send(`# Node at port ${targetPort} returned non-Prometheus response\n`);
+                // Return 200 with comment — Prometheus keeps target UP, just no metrics scraped
+                res.status(200).set('Content-Type', 'text/plain; charset=utf-8')
+                    .send(`# Node at port ${targetPort} returned non-Prometheus response (node may be bootstrapping)\n`);
                 return;
             }
 
             res.set('Content-Type', 'text/plain; charset=utf-8');
             res.send(data);
         } catch {
-            res.status(503).set('Content-Type', 'text/plain; charset=utf-8')
+            // Return 200 with comment instead of 503 to avoid Prometheus parse errors
+            res.status(200).set('Content-Type', 'text/plain; charset=utf-8')
                 .send(`# Node at port ${targetPort} not reachable\n`);
         }
     }

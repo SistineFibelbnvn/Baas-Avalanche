@@ -423,12 +423,36 @@ export class NodeStatusService {
           provider.getNetwork().catch(() => null)
         ]);
 
+        // Try to get real node info via Info API (extract base URL)
+        let version: string | null = null;
+        let nodeId: string | null = null;
+        let networkName: string | null = null;
+        let peerCount: number | null = null;
+        try {
+          const urlObj = new URL(customRpcUrl);
+          const baseUrl = `${urlObj.protocol}//${urlObj.hostname}:${urlObj.port}`;
+          const client = new Avalanche(urlObj.hostname, Number(urlObj.port), urlObj.protocol.replace(':', ''));
+          const info = client.Info();
+          const [versionRes, netName, nId, peersRes] = await Promise.all([
+            info.getNodeVersion().catch(() => null),
+            info.getNetworkName().catch(() => null),
+            info.getNodeID().catch(() => null),
+            info.peers().catch(() => null),
+          ]);
+          version = (versionRes as any)?.version ?? versionRes ?? null;
+          networkName = netName ?? null;
+          nodeId = nId ?? null;
+          peerCount = Array.isArray(peersRes) ? peersRes.length : (peersRes as any)?.peers?.length ?? null;
+        } catch (e) {
+          // Info API not available, use fallback
+        }
+
         return {
-          version: 'Custom Network',
-          nodeId: null,
+          version: version || 'N/A',
+          nodeId,
           networkId: network ? Number(network.chainId) : null,
-          networkName: 'Custom L1',
-          peerCount: null,
+          networkName: networkName || 'Local Network',
+          peerCount,
           healthy: blockNumber !== null,
           blockHeight: blockNumber,
           rpcUrl: customRpcUrl,

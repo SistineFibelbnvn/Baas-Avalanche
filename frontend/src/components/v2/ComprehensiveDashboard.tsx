@@ -26,6 +26,8 @@ export function ComprehensiveDashboard({ onCreateChain, onNavigate }: Comprehens
   const [recentBlocks, setRecentBlocks] = useState<RecentBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // TPS history for chart — accumulates real data over time
+  const [tpsHistory, setTpsHistory] = useState<{ time: string; tps: number }[]>([]);
 
   // Fetch all data on mount or when network changes
   useEffect(() => {
@@ -44,7 +46,16 @@ export function ComprehensiveDashboard({ onCreateChain, onNavigate }: Comprehens
           api.node.blocks(rpcUrl), // Pass RPC URL
         ]);
 
-        if (stats.status === 'fulfilled') setDashboardStats(stats.value);
+        if (stats.status === 'fulfilled') {
+          setDashboardStats(stats.value);
+          // Accumulate TPS history
+          const currentTps = Number(stats.value?.tps) || 0;
+          setTpsHistory(prev => {
+            const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const updated = [...prev, { time: now, tps: currentTps }];
+            return updated.slice(-20); // Keep last 20 data points
+          });
+        }
         if (subnetList.status === 'fulfilled') setSubnets(subnetList.value || []);
         if (validatorList.status === 'fulfilled') setValidators(validatorList.value || []);
         if (blocks.status === 'fulfilled') setRecentBlocks(blocks.value || []);
@@ -74,31 +85,40 @@ export function ComprehensiveDashboard({ onCreateChain, onNavigate }: Comprehens
     activeNodes: dashboardStats?.peerCount || 0,
     totalValidators: validators.length,
     networkHealth: dashboardStats?.healthy ? 100 : 0,
-    avgBlockTime: 2.0, // Default for Avalanche
+    avgBlockTime: 2.0,
     tps: Number(dashboardStats?.tps) || 0,
-    totalTransactions: 0, // Would need aggregation
-    avgGasPrice: parseInt(dashboardStats?.gasPrice || '0') / 1e9 || 25,
+    totalTransactions: dashboardStats?.blockHeight || 0,
+    avgGasPrice: parseInt(dashboardStats?.gasPrice || '25'),
     blockHeight: dashboardStats?.blockHeight || 0,
   };
 
-  // Generate TPS chart data (simulated for now, would need historical API)
-  const tpsData = Array.from({ length: 20 }, (_, i) => ({
-    time: `${i}:00`,
-    tps: networkMetrics.tps,
-    target: 1000,
-  }));
+  // TPS chart — uses accumulated real data from polling
+  const tpsData = tpsHistory.length > 0
+    ? tpsHistory
+    : [{ time: 'now', tps: 0 }];
 
-  const blockTimeData = Array.from({ length: 20 }, (_, i) => ({
-    time: `${i}:00`,
-    blockTime: Number((Math.random() * 0.5 + 1.8).toFixed(2)),
-    target: 2.0,
-  }));
+  // Block time — calculate from recent blocks timestamps
+  const blockTimeData = recentBlocks.length >= 2
+    ? recentBlocks.slice(0, 20).map((block, i, arr) => {
+      const nextBlock = arr[i + 1];
+      let blockTime = 2.0;
+      if (nextBlock && block.timestamp && nextBlock.timestamp) {
+        const t1 = new Date(block.timestamp).getTime();
+        const t2 = new Date(nextBlock.timestamp).getTime();
+        if (!isNaN(t1) && !isNaN(t2)) {
+          blockTime = Math.abs(t1 - t2) / 1000;
+          // Cap at 60s — huge gaps are from genesis/inactive periods
+          if (blockTime > 60) blockTime = 60;
+        }
+      }
+      return { time: `#${block.height}`, blockTime: Number(blockTime.toFixed(2)), target: 2.0 };
+    }).filter((_, i, arr) => i < arr.length - 1)
+    : [{ time: 'N/A', blockTime: 2.0, target: 2.0 }];
 
+  // Resource stats — not available from node API, show actual status
   const resourceData = [
-    { name: 'CPU', usage: 45, color: 'bg-blue-500' },
-    { name: 'Memory', usage: 62, color: 'bg-purple-500' },
-    { name: 'Storage', usage: 38, color: 'bg-green-500' },
-    { name: 'Network', usage: 71, color: 'bg-orange-500' },
+    { name: 'Node Health', usage: dashboardStats?.healthy ? 100 : 0, color: dashboardStats?.healthy ? 'bg-green-500' : 'bg-red-500' },
+    { name: 'Peers', usage: Math.min(100, (dashboardStats?.peerCount || 0) * 10), color: 'bg-blue-500' },
   ];
 
   const systemAlerts = dashboardStats?.nodeOffline
@@ -451,11 +471,11 @@ export function ComprehensiveDashboard({ onCreateChain, onNavigate }: Comprehens
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Active</span>
-                  <span className="text-sm font-medium text-green-600">{subnets.filter(s => s.status === 'active').length}</span>
+                  <span className="text-sm font-medium text-green-600">{subnets.filter(s => s.status === 'active' || s.status === 'RUNNING').length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Creating</span>
-                  <span className="text-sm font-medium text-yellow-600">{subnets.filter(s => s.status === 'creating').length}</span>
+                  <span className="text-sm font-medium text-yellow-600">{subnets.filter(s => s.status === 'creating' || s.status === 'CREATING' || s.status === 'DEPLOYING').length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Total Validators</span>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Network, Shield, FileCode, Activity, Wrench, Settings, ChevronRight, Blocks, Sliders, Layers, ArrowRightLeft } from 'lucide-react';
+import { LayoutDashboard, Network, Shield, FileCode, Activity, Settings, ChevronRight, Blocks, Sliders } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
 
 interface SidebarProps {
@@ -9,14 +9,11 @@ interface SidebarProps {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, category: 'main' },
   { id: 'subnets', label: 'Subnets', icon: Network, category: 'main' },
-  { id: 'topology', label: 'Network Topology', icon: Layers, category: 'main' },
-  { id: 'bridge', label: 'Cross-Chain Bridge', icon: ArrowRightLeft, category: 'main' },
   { id: 'explorer', label: 'Block Explorer', icon: Blocks, category: 'main' },
   { id: 'nodes', label: 'Nodes', icon: Network, category: 'main' },
   { id: 'validators', label: 'Validators', icon: Shield, category: 'main' },
   { id: 'contracts', label: 'Contracts', icon: FileCode, category: 'main' },
   { id: 'monitoring', label: 'Monitoring', icon: Activity, category: 'main' },
-  { id: 'toolbox', label: 'Toolbox', icon: Wrench, category: 'main' },
   { id: 'configuration', label: 'Configuration', icon: Sliders, category: 'system' },
   { id: 'settings', label: 'Settings', icon: Settings, category: 'system' },
 ];

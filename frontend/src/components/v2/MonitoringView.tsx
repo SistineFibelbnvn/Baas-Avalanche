@@ -13,6 +13,14 @@ import { toast } from 'sonner';
 interface MonitoringStatus {
   prometheusRunning: boolean;
   grafanaRunning: boolean;
+  lokiRunning?: boolean;
+  alertmanagerRunning?: boolean;
+  status?: string;
+  grafanaUrl?: string | null;
+  prometheusUrl?: string | null;
+  lokiUrl?: string | null;
+  alertmanagerUrl?: string | null;
+  services?: { name: string; state: string; status: string }[];
 }
 
 interface Alert {
@@ -34,6 +42,8 @@ export function MonitoringView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  // TPS history for real-time chart
+  const [tpsHistory, setTpsHistory] = useState<{ time: string; tps: number }[]>([]);
 
   // Fetch all monitoring data
   const fetchData = async () => {
@@ -46,7 +56,16 @@ export function MonitoringView() {
         api.node.blocks(selectedNetwork?.rpcUrl),
       ]);
 
-      if (stats.status === 'fulfilled') setDashboardStats(stats.value);
+      if (stats.status === 'fulfilled') {
+        setDashboardStats(stats.value);
+        // Accumulate TPS history
+        const currentTps = Number(stats.value?.tps) || 0;
+        setTpsHistory(prev => {
+          const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const updated = [...prev, { time: now, tps: currentTps }];
+          return updated.slice(-20);
+        });
+      }
       if (monitoring.status === 'fulfilled') setMonitoringStatus(monitoring.value);
       if (validatorList.status === 'fulfilled') setValidators(validatorList.value || []);
       if (alertsList.status === 'fulfilled') setSystemAlerts(alertsList.value || []);
@@ -114,22 +133,26 @@ export function MonitoringView() {
     }
   };
 
-  // Generate chart data based on real stats
+  // TPS data — uses accumulated real history
   const tpsValue = Number(dashboardStats?.tps) || 0;
-  const tpsData = Array.from({ length: 20 }, (_, i) => ({
-    time: `${i}:00`,
-    tps: tpsValue,
-    avgTps: tpsValue,
-  }));
+  const tpsData = tpsHistory.length > 0
+    ? tpsHistory.map(h => ({ ...h, avgTps: tpsValue }))
+    : [{ time: 'now', tps: 0, avgTps: 0 }];
+  const prometheusAvailable = !!monitoringStatus?.prometheusRunning;
 
-  // Dùng data thật từ api.node.blocks()
-  const blockProductionData = blockData.length > 0
-    ? blockData
-    : Array.from({ length: 10 }, (_, i) => ({
-      block: `${(dashboardStats?.blockHeight || 0) - 9 + i}`,
-      time: 2.0,
-      transactions: 0,
-    }));
+  // Block production data — compute actual block times from timestamps
+  const blockProductionData = blockData.length >= 2
+    ? blockData.slice(0, 20).map((b, i, arr) => {
+      const next = arr[i + 1];
+      let time = 2.0;
+      if (next && b.timestamp && next.timestamp) {
+        const t1 = new Date(b.timestamp).getTime();
+        const t2 = new Date(next.timestamp).getTime();
+        if (!isNaN(t1) && !isNaN(t2)) time = Math.abs(t1 - t2) / 1000;
+      }
+      return { block: String(b.height || b.block), time: Number(time.toFixed(2)), transactions: b.transactions || 0 };
+    }).filter((_, i, arr) => i < arr.length - 1)
+    : [{ block: String(dashboardStats?.blockHeight || 0), time: 2.0, transactions: 0 }];
 
   const networkHealth = {
     status: dashboardStats?.healthy ? 'healthy' : 'offline',
@@ -211,40 +234,70 @@ export function MonitoringView() {
 
       {/* Monitoring Stack Status */}
       {monitoringStatus && (
-        <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
-          <span className="text-sm text-muted-foreground">Monitoring Stack:</span>
-          <Badge className={monitoringStatus.prometheusRunning
-            ? 'bg-green-500/10 text-green-600 border-green-500/20'
-            : 'bg-red-500/10 text-red-600 border-red-500/20'
-          }>
-            Prometheus: {monitoringStatus.prometheusRunning ? 'Running' : 'Stopped'}
-          </Badge>
-          <Badge className={monitoringStatus.grafanaRunning
-            ? 'bg-green-500/10 text-green-600 border-green-500/20'
-            : 'bg-red-500/10 text-red-600 border-red-500/20'
-          }>
-            Grafana: {monitoringStatus.grafanaRunning ? 'Running' : 'Stopped'}
-          </Badge>
-          {monitoringStatus.grafanaRunning && (
-            <a
-              href="http://localhost:3010"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Open Grafana Dashboard →
-            </a>
-          )}
-          {monitoringStatus.prometheusRunning && (
-            <a
-              href="http://localhost:9090"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-orange-600 hover:underline ml-2"
-            >
-              Open Prometheus →
-            </a>
-          )}
+        <div className="p-4 rounded-lg border bg-card">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted-foreground font-medium">Monitoring Stack:</span>
+            <Badge className={monitoringStatus.prometheusRunning
+              ? 'bg-green-500/10 text-green-600 border-green-500/20'
+              : 'bg-red-500/10 text-red-600 border-red-500/20'
+            }>
+              Prometheus: {monitoringStatus.prometheusRunning ? 'Running' : 'Stopped'}
+            </Badge>
+            <Badge className={monitoringStatus.grafanaRunning
+              ? 'bg-green-500/10 text-green-600 border-green-500/20'
+              : 'bg-red-500/10 text-red-600 border-red-500/20'
+            }>
+              Grafana: {monitoringStatus.grafanaRunning ? 'Running' : 'Stopped'}
+            </Badge>
+            {monitoringStatus.lokiRunning !== undefined && (
+              <Badge className={monitoringStatus.lokiRunning
+                ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+              }>
+                Loki: {monitoringStatus.lokiRunning ? 'Running' : 'Stopped'}
+              </Badge>
+            )}
+            {monitoringStatus.alertmanagerRunning !== undefined && (
+              <Badge className={monitoringStatus.alertmanagerRunning
+                ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+              }>
+                Alertmanager: {monitoringStatus.alertmanagerRunning ? 'Running' : 'Stopped'}
+              </Badge>
+            )}
+            <div className="flex items-center gap-3 ml-auto flex-wrap">
+              {(monitoringStatus.grafanaUrl || monitoringStatus.grafanaRunning) && (
+                <a
+                  href={monitoringStatus.grafanaUrl || 'http://localhost:3010'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline whitespace-nowrap"
+                >
+                  Open Grafana →
+                </a>
+              )}
+              {(monitoringStatus.prometheusUrl || monitoringStatus.prometheusRunning) && (
+                <a
+                  href={monitoringStatus.prometheusUrl || 'http://localhost:9090'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-orange-600 hover:underline whitespace-nowrap"
+                >
+                  Open Prometheus →
+                </a>
+              )}
+              {monitoringStatus.lokiRunning && (
+                <a
+                  href={monitoringStatus.lokiUrl || 'http://localhost:3010/explore'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-purple-600 hover:underline whitespace-nowrap"
+                >
+                  View Logs (Loki) →
+                </a>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -347,42 +400,58 @@ export function MonitoringView() {
         <TabsContent value="performance" className="space-y-6 mt-6">
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="mb-4 font-medium">Transactions Per Second (TPS)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={tpsData}>
-                <defs>
-                  <linearGradient id="colorTps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="time" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="tps"
-                  stroke="#3b82f6"
-                  fillOpacity={1}
-                  fill="url(#colorTps)"
-                  name="Current TPS"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="avgTps"
-                  stroke="#10b981"
-                  strokeDasharray="5 5"
-                  name="Average TPS"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {!prometheusAvailable ? (
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground gap-3">
+                <Activity className="w-10 h-10 opacity-40" />
+                <p className="text-sm">Start monitoring stack to see live TPS data</p>
+                {!monitoringStatus?.prometheusRunning && (
+                  <p className="text-xs opacity-60">Prometheus không chạy — click &quot;Start Monitoring&quot; ở trên</p>
+                )}
+              </div>
+            ) : tpsValue === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground gap-3">
+                <Activity className="w-10 h-10 opacity-40" />
+                <p className="text-sm">No transactions yet</p>
+                <p className="text-xs opacity-60">TPS will update when transactions are submitted to the network</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={tpsData}>
+                  <defs>
+                    <linearGradient id="colorTps" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="time" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="tps"
+                    stroke="#3b82f6"
+                    fillOpacity={1}
+                    fill="url(#colorTps)"
+                    name="Current TPS"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="avgTps"
+                    stroke="#10b981"
+                    strokeDasharray="5 5"
+                    name="Average TPS"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </TabsContent>
 

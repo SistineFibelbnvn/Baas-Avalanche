@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useNetwork, Network } from '@/context/NetworkContext';
-import { ConnectWallet } from '@/components/contracts/ConnectWallet';
 import { useAuth } from '@/context/AuthContext';
 
 interface TopBarProps {
@@ -118,9 +117,6 @@ export function TopBar({ theme, onThemeToggle }: TopBarProps) {
 
       {/* Right: Search, Notifications, Theme Toggle */}
       <div className="flex items-center gap-3">
-        {/* Wallet Connect */}
-        <ConnectWallet />
-
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input

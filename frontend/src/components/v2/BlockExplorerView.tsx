@@ -256,7 +256,7 @@ export function BlockExplorerView() {
                     <TableHead>Block</TableHead>
                     <TableHead>From</TableHead>
                     <TableHead>To</TableHead>
-                    <TableHead>Value (AVAX)</TableHead>
+                    <TableHead>Value</TableHead>
                     <TableHead>Time</TableHead>
                   </TableRow>
                 </TableHeader>

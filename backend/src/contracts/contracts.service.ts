@@ -27,6 +27,59 @@ export class ContractsService implements OnModuleInit {
         private prisma: PrismaService
     ) { }
 
+    // Compile Solidity source code using solc
+    async compileSolidity(sourceCode: string, contractName?: string) {
+        try {
+            const solc = require('solc');
+
+            const input = {
+                language: 'Solidity',
+                sources: { 'contract.sol': { content: sourceCode } },
+                settings: {
+                    outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } }
+                }
+            };
+
+            const output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+            // Check for errors
+            if (output.errors) {
+                const errors = output.errors.filter((e: any) => e.severity === 'error');
+                if (errors.length > 0) {
+                    return {
+                        success: false,
+                        errors: errors.map((e: any) => e.formattedMessage || e.message)
+                    };
+                }
+            }
+
+            // Find the contract
+            const contracts = output.contracts?.['contract.sol'];
+            if (!contracts || Object.keys(contracts).length === 0) {
+                return { success: false, errors: ['No contracts found in source code'] };
+            }
+
+            // Use specified name or first contract found
+            const name = contractName && contracts[contractName]
+                ? contractName
+                : Object.keys(contracts)[0];
+            const compiled = contracts[name];
+
+            return {
+                success: true,
+                contractName: name,
+                abi: compiled.abi,
+                bytecode: '0x' + compiled.evm.bytecode.object,
+                availableContracts: Object.keys(contracts),
+                warnings: output.errors?.filter((e: any) => e.severity === 'warning')
+                    .map((e: any) => e.formattedMessage || e.message) || []
+            };
+        } catch (e: any) {
+            this.logger.error(`Compilation failed: ${e.message}`);
+            return { success: false, errors: [`Compiler error: ${e.message}`] };
+        }
+    }
+
     private async isRpcReachable(rpcUrl: string): Promise<boolean> {
         try {
             const controller = new AbortController();

@@ -189,24 +189,45 @@ export class NodeStatusService {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const blockNumber = await provider.getBlockNumber();
 
-      // Calculate Real TPS from latest block
+      // Calculate Real TPS from last N blocks (average over window)
+      const TPS_WINDOW = 10; // Number of blocks to average over
       let realTps = "0.00";
       let realAvgBlockTime = "2.0s";
       let txCount = 0;
 
       try {
-        const block = await provider.getBlock(blockNumber);
-        if (block) {
-          txCount = block.transactions.length;
-          // Try to get previous block for time diff
-          if (blockNumber > 0) {
-            const prevBlock = await provider.getBlock(blockNumber - 1);
-            if (prevBlock) {
-              const timeDiff = Number(block.timestamp) - Number(prevBlock.timestamp);
-              if (timeDiff > 0) {
-                realTps = (txCount / timeDiff).toFixed(2);
-                realAvgBlockTime = `${timeDiff.toFixed(1)}s`;
-              }
+        if (blockNumber >= TPS_WINDOW) {
+          // Fetch newest and oldest blocks in window, plus count tx in between
+          const newestBlock = await provider.getBlock(blockNumber);
+          const oldestBlock = await provider.getBlock(blockNumber - TPS_WINDOW);
+
+          if (newestBlock && oldestBlock) {
+            // Count transactions across all blocks in the window
+            let totalTxs = newestBlock.transactions.length;
+            for (let i = 1; i < TPS_WINDOW; i++) {
+              try {
+                const b = await provider.getBlock(blockNumber - i);
+                if (b) totalTxs += b.transactions.length;
+              } catch { /* skip block */ }
+            }
+            txCount = totalTxs;
+
+            const timeDiff = Number(newestBlock.timestamp) - Number(oldestBlock.timestamp);
+            if (timeDiff > 0) {
+              realTps = (totalTxs / timeDiff).toFixed(2);
+              realAvgBlockTime = `${(timeDiff / TPS_WINDOW).toFixed(1)}s`;
+            }
+          }
+        } else if (blockNumber > 0) {
+          // Not enough blocks — fallback to single block calculation
+          const block = await provider.getBlock(blockNumber);
+          const prevBlock = await provider.getBlock(blockNumber - 1);
+          if (block && prevBlock) {
+            txCount = block.transactions.length;
+            const timeDiff = Number(block.timestamp) - Number(prevBlock.timestamp);
+            if (timeDiff > 0) {
+              realTps = (txCount / timeDiff).toFixed(2);
+              realAvgBlockTime = `${timeDiff.toFixed(1)}s`;
             }
           }
         }
@@ -215,15 +236,36 @@ export class NodeStatusService {
       }
 
       // 3. Fetch Peer Count (Info API)
+      // IMPORTANT: info.peers is a node-level API, NOT chain-specific.
+      // Always use the actual Avalanche node base URL, not the rpcUrl
+      // (which may be a proxy URL like http://localhost:4000/rpc/proxy/...).
       let peerCount = 0;
       try {
-        // Construct Base URL from RPC URL (remove path)
-        // Default local: http://127.0.0.1:9650/ext/bc/C/rpc -> http://127.0.0.1:9650
-        const urlObj = new URL(rpcUrl);
-        const baseUrl = `${urlObj.protocol}//${urlObj.hostname}:${urlObj.port}`;
-        peerCount = await this.getPeerCount(baseUrl);
+        const nodeHost = process.env.AVALANCHE_NODE_HOST ?? '127.0.0.1';
+        const nodePort = Number(process.env.AVALANCHE_NODE_PORT ?? '9650');
+        const nodeProtocol = process.env.AVALANCHE_NODE_PROTOCOL ?? 'http';
+        const nodeBaseUrl = `${nodeProtocol}://${nodeHost}:${nodePort}`;
+        peerCount = await this.getPeerCount(nodeBaseUrl);
       } catch (e) {
         // Ignore peer count errors
+      }
+      // 4. Fetch Gas Price
+      let gasPrice = '0.00';
+      try {
+        const feeData = await provider.getFeeData();
+        if (feeData.gasPrice) {
+          const gasPriceWei = feeData.gasPrice;
+          const gasPriceGwei = Number(ethers.formatUnits(gasPriceWei, 'gwei'));
+          if (gasPriceGwei >= 0.001) {
+            // Normal gas price — show in Gwei
+            gasPrice = gasPriceGwei.toFixed(2);
+          } else if (gasPriceWei > 0n) {
+            // Very low gas price (local network) — show in wei
+            gasPrice = `${gasPriceWei.toString()} wei`;
+          }
+        }
+      } catch (e) {
+        // Ignore gas price fetch errors
       }
 
       return {
@@ -234,7 +276,7 @@ export class NodeStatusService {
         totalTx: `${blockNumber}`,
         avgBlockTime: realAvgBlockTime,
         peerCount: peerCount,
-        gasPrice: '0.00' // Removed dependency on status.gasPrice
+        gasPrice,
       };
     } catch (error: any) {
       // Only log if it's not a connection refused error or a 503 proxy error (to reduce spam)
@@ -273,6 +315,7 @@ export class NodeStatusService {
       const data = await response.json();
       return data.result?.peers?.length || 0;
     } catch (e) {
+      this.logger.error(`getPeerCount failed for baseUrl ${baseUrl}`, e);
       return 0;
     }
   }

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Network, Shield, FileCode, Activity, Settings, ChevronRight, Blocks, Sliders } from 'lucide-react';
+import { LayoutDashboard, Network, Shield, FileCode, Activity, Settings, ChevronRight, Blocks, Sliders, Droplets } from 'lucide-react';
 import { cn } from '@/components/ui/utils';
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'nodes', label: 'Nodes', icon: Network, category: 'main' },
   { id: 'validators', label: 'Validators', icon: Shield, category: 'main' },
   { id: 'contracts', label: 'Contracts', icon: FileCode, category: 'main' },
+  { id: 'faucet', label: 'Faucet', icon: Droplets, category: 'main' },
   { id: 'monitoring', label: 'Monitoring', icon: Activity, category: 'main' },
   { id: 'configuration', label: 'Configuration', icon: Sliders, category: 'system' },
   { id: 'settings', label: 'Settings', icon: Settings, category: 'system' },

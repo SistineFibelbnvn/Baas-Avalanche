@@ -88,7 +88,7 @@ export function ComprehensiveDashboard({ onCreateChain, onNavigate }: Comprehens
     avgBlockTime: 2.0,
     tps: Number(dashboardStats?.tps) || 0,
     totalTransactions: dashboardStats?.blockHeight || 0,
-    avgGasPrice: parseInt(dashboardStats?.gasPrice || '25'),
+    avgGasPrice: parseFloat(dashboardStats?.gasPrice || '0') || 0,
     blockHeight: dashboardStats?.blockHeight || 0,
   };
 

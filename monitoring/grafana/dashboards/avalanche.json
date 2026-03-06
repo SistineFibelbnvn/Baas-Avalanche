@@ -511,7 +511,7 @@
             "targets": [
                 {
                     "datasource": "Prometheus",
-                    "expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+                    "expr": "clamp_min(1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])), 0)",
                     "legendFormat": "System CPU",
                     "refId": "A"
                 }

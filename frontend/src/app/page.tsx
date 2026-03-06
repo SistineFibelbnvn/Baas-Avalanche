@@ -15,6 +15,7 @@ import { SettingsView } from "@/components/v2/SettingsView";
 import { BlockExplorerView } from "@/components/v2/BlockExplorerView";
 import { ConfigurationView } from "@/components/v2/ConfigurationView";
 import { SubnetManagementView } from "@/components/v2/SubnetManagementView";
+import { FaucetView } from "@/components/v2/FaucetView";
 
 import { CreateChainWizard } from "@/components/v2/CreateChainWizard";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,9 +25,20 @@ export default function Home() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [activeView, setActiveView] = useState('dashboard');
+  const [activeView, setActiveView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('activeView') || 'dashboard';
+    }
+    return 'dashboard';
+  });
   const [selectedNetwork, setSelectedNetwork] = useState('mainnet');
   const [showCreateChain, setShowCreateChain] = useState(false);
+
+  // Persist active view
+  const handleNavigate = (view: string) => {
+    setActiveView(view);
+    localStorage.setItem('activeView', view);
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -82,7 +94,7 @@ export default function Home() {
       });
       setShowCreateChain(false);
       // Switch to subnets view to see progress
-      setActiveView('subnets');
+      handleNavigate('subnets');
     } catch (error) {
       console.error('Failed to create chain:', error);
       toast.error('Failed to create blockchain', {
@@ -94,7 +106,7 @@ export default function Home() {
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <ComprehensiveDashboard onCreateChain={() => setShowCreateChain(true)} onNavigate={setActiveView} />;
+        return <ComprehensiveDashboard onCreateChain={() => setShowCreateChain(true)} onNavigate={handleNavigate} />;
       case 'subnets':
         return <SubnetManagementView />;
       case 'explorer':
@@ -105,6 +117,8 @@ export default function Home() {
         return <ValidatorsView />;
       case 'contracts':
         return <ContractsView />;
+      case 'faucet':
+        return <FaucetView />;
       case 'monitoring':
         return <MonitoringView />;
       case 'configuration':
@@ -121,7 +135,7 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar
         activeItem={activeView}
-        onNavigate={setActiveView}
+        onNavigate={handleNavigate}
       />
 
       {/* Main Content */}

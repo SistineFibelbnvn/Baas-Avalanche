@@ -140,14 +140,19 @@ export function NetworkProvider({ children }: NetworkProviderProps) {
     useEffect(() => {
         if (authLoading || !token) return;
 
-        refreshNetworks();
-
-        // Restore selected network từ localStorage
-        const savedNetworkId = localStorage.getItem("selectedNetworkId");
-        if (savedNetworkId && savedNetworkId !== "primary-c-chain") {
-            const network = networks.find(n => n.id === savedNetworkId);
-            if (network) setSelectedNetwork(network);
-        }
+        refreshNetworks().then(() => {
+            // Restore selected network from localStorage AFTER networks are loaded
+            const savedNetworkId = localStorage.getItem("selectedNetworkId");
+            if (savedNetworkId && savedNetworkId !== "primary-c-chain") {
+                setNetworks(currentNetworks => {
+                    const network = currentNetworks.find(n => n.id === savedNetworkId);
+                    if (network) {
+                        setSelectedNetwork(network);
+                    }
+                    return currentNetworks;
+                });
+            }
+        });
     }, [authLoading, token]);   // Chạy lại khi login/logout
 
     // Poll for network status updates

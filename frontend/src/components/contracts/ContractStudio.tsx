@@ -54,6 +54,10 @@ export function ContractStudio() {
     const [customAbi, setCustomAbi] = useState("");
     const [customBytecode, setCustomBytecode] = useState("");
     const [constructorArgs, setConstructorArgs] = useState("");
+    const [customSource, setCustomSource] = useState(`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MyContract {\n    uint256 public value;\n\n    function setValue(uint256 _value) public {\n        value = _value;\n    }\n\n    function getValue() public view returns (uint256) {\n        return value;\n    }\n}`);
+    const [isCompiling, setIsCompiling] = useState(false);
+    const [compileError, setCompileError] = useState<string | null>(null);
+    const [compileSuccess, setCompileSuccess] = useState(false);
 
     // Interact State
     const [contracts, setContracts] = useState<DeployedContract[]>([]);
@@ -179,6 +183,33 @@ export function ContractStudio() {
         setProvider(prov);
         setSigner(sig);
         setAccount(addr);
+    };
+
+    const handleCompile = async () => {
+        if (!customSource.trim()) return toast.error("Please write some Solidity code");
+        setIsCompiling(true);
+        setCompileError(null);
+        setCompileSuccess(false);
+        try {
+            const result = await api.contracts.compile(customSource);
+            if (result.success) {
+                setCustomAbi(JSON.stringify(result.abi, null, 2));
+                setCustomBytecode(result.bytecode || '');
+                setContractName(result.contractName || 'CustomContract');
+                setCompileSuccess(true);
+                toast.success(`Compiled ${result.contractName}!`, {
+                    description: result.warnings?.length ? `${result.warnings.length} warning(s)` : 'Ready to deploy'
+                });
+            } else {
+                setCompileError(result.errors?.join('\n') || 'Compilation failed');
+                toast.error('Compilation failed', { description: result.errors?.[0]?.slice(0, 200) });
+            }
+        } catch (e: any) {
+            setCompileError(e.message);
+            toast.error('Compile error', { description: e.message });
+        } finally {
+            setIsCompiling(false);
+        }
     };
 
     const handleDeploy = async () => {
@@ -493,7 +524,7 @@ export function ContractStudio() {
                                 </CardTitle>
                                 <CardDescription>Paste compiled ABI and Bytecode from Remix IDE, Hardhat, or Foundry</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="pt-6 space-y-4">
                                 <div className="space-y-2">
                                     <Label>Contract Name</Label>
                                     <Input
@@ -502,23 +533,50 @@ export function ContractStudio() {
                                         placeholder="MyContract"
                                     />
                                 </div>
+
+                                {/* Solidity Source Editor */}
+                                <div className="space-y-2">
+                                    <Label>Solidity Source Code</Label>
+                                    <Textarea
+                                        value={customSource}
+                                        onChange={e => { setCustomSource(e.target.value); setCompileSuccess(false); setCompileError(null); }}
+                                        placeholder="// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MyContract { ... }"
+                                        className="font-mono text-xs min-h-[250px]"
+                                    />
+                                    <div className="flex items-center gap-2">
+                                        <Button onClick={handleCompile} disabled={isCompiling} variant={compileSuccess ? 'outline' : 'default'}>
+                                            {isCompiling ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                                            {isCompiling ? 'Compiling...' : compileSuccess ? '✓ Compiled' : 'Compile'}
+                                        </Button>
+                                        {compileSuccess && <span className="text-xs text-green-600">ABI & Bytecode auto-filled below ↓</span>}
+                                    </div>
+                                    {compileError && (
+                                        <Alert variant="destructive">
+                                            <AlertTriangle className="h-4 w-4" />
+                                            <AlertTitle>Compilation Error</AlertTitle>
+                                            <AlertDescription className="text-xs font-mono whitespace-pre-wrap max-h-[150px] overflow-y-auto">{compileError}</AlertDescription>
+                                        </Alert>
+                                    )}
+                                </div>
+
+                                {/* ABI + Bytecode (auto-filled or manual) */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>ABI <span className="text-muted-foreground text-xs">(JSON array)</span></Label>
+                                        <Label>ABI <span className="text-muted-foreground text-xs">(auto-filled after compile, or paste manually)</span></Label>
                                         <Textarea
                                             value={customAbi}
                                             onChange={e => setCustomAbi(e.target.value)}
-                                            placeholder='[{"inputs":[],"name":"myFunc","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"}]'
-                                            className="font-mono text-xs min-h-[200px]"
+                                            placeholder='[{"inputs":[],"name":"myFunc",...}]'
+                                            className="font-mono text-xs min-h-[150px]"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Bytecode <span className="text-muted-foreground text-xs">(hex, with or without 0x)</span></Label>
+                                        <Label>Bytecode <span className="text-muted-foreground text-xs">(auto-filled after compile, or paste manually)</span></Label>
                                         <Textarea
                                             value={customBytecode}
                                             onChange={e => setCustomBytecode(e.target.value)}
                                             placeholder="0x608060405234801561001057600080fd5b50..."
-                                            className="font-mono text-xs min-h-[200px]"
+                                            className="font-mono text-xs min-h-[150px]"
                                         />
                                     </div>
                                 </div>
@@ -531,18 +589,7 @@ export function ContractStudio() {
                                         className="font-mono text-sm"
                                     />
                                 </div>
-                                <Alert>
-                                    <AlertTriangle className="h-4 w-4" />
-                                    <AlertTitle>How to get ABI & Bytecode</AlertTitle>
-                                    <AlertDescription className="text-xs">
-                                        1. Open <a href="https://remix.ethereum.org" target="_blank" className="underline text-primary">Remix IDE</a><br />
-                                        2. Write/paste your Solidity contract<br />
-                                        3. Compile → Copy ABI from "Compilation Details"<br />
-                                        4. Copy Bytecode (object field) from "Compilation Details"<br />
-                                        5. Paste both here and deploy!
-                                    </AlertDescription>
-                                </Alert>
-                                <Button className="w-full" size="lg" onClick={handleDeploy} disabled={isDeploying || !signer}>
+                                <Button className="w-full" size="lg" onClick={handleDeploy} disabled={isDeploying || !signer || (!customAbi && !customBytecode)}>
                                     {isDeploying ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="mr-2 h-4 w-4" />}
                                     {isDeploying ? "Deploying..." : "Deploy Custom Contract"}
                                 </Button>

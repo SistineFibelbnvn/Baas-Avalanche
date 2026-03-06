@@ -59,7 +59,7 @@ export function NodesView() {
     'Network': nodeStatus?.networkName || 'Local Network',
     'Version': nodeStatus?.version || 'N/A',
     'Block Height': nodeStatus?.blockHeight?.toLocaleString() || 'N/A',
-    'Gas Price': nodeStatus?.gasPrice ? `${(parseInt(nodeStatus.gasPrice) / 1e9).toFixed(2)} Gwei` : 'N/A',
+    'Gas Price': nodeStatus?.gasPrice ? (nodeStatus.gasPrice.includes('wei') ? nodeStatus.gasPrice : `${nodeStatus.gasPrice} Gwei`) : 'N/A',
     'Peer Count': nodeStatus?.peerCount?.toString() || 'N/A',
     'TPS': nodeStatus?.tps?.toString() || 'N/A',
   };

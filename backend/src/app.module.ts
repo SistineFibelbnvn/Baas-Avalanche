@@ -21,6 +21,7 @@ import { GenesisModule } from './genesis/genesis.module';
 import { LogsModule } from './logs/logs.module';
 import { NetworkRunnerModule } from './network-runner/network-runner.module';
 import { RpcProxyModule } from './rpc-proxy/rpc-proxy.module';
+import { FaucetModule } from './faucet/faucet.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RpcProxyModule } from './rpc-proxy/rpc-proxy.module';
     NodeStatusModule,
     NetworkRunnerModule,
     RpcProxyModule,
+    FaucetModule,
   ],
 })
 export class AppModule { }

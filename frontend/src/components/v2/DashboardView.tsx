@@ -69,7 +69,7 @@ export function DashboardView({ loading = false, onCreateChain }: DashboardViewP
     },
     {
       title: 'Gas Price',
-      value: `${parseInt(stats.gasPrice || '25', 10)} Gwei`,
+      value: stats.gasPrice && stats.gasPrice !== '0.00' ? (stats.gasPrice.includes('wei') ? stats.gasPrice : `${stats.gasPrice} Gwei`) : 'N/A',
       icon: Clock,
       iconColor: 'bg-purple-500'
     },

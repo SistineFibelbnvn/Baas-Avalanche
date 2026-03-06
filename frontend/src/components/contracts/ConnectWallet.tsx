@@ -118,7 +118,11 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
         };
 
         const handleChainChanged = () => {
-            window.location.reload();
+            // Don't reload - just update balance for current address
+            if (address) {
+                const p = getSafeProvider();
+                if (p) updateBalance(p, address);
+            }
         };
 
         try {
@@ -139,21 +143,21 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
     }, []);
 
     async function checkIfWalletIsConnected() {
-        if (typeof window.ethereum !== 'undefined') {
-            try {
+        if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') return;
+        try {
+            // Use eth_accounts for silent check (no popup)
+            const accounts: string[] = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts && accounts.length > 0) {
                 const provider = getSafeProvider();
                 if (!provider) return;
-                const accounts = await provider.listAccounts();
-                if (accounts.length > 0) {
-                    const signer = await provider.getSigner();
-                    const addr = accounts[0].address;
-                    setAddress(addr);
-                    updateBalance(provider, addr);
-                    if (onConnect) onConnect(provider, signer, addr);
-                }
-            } catch (error) {
-                console.error("Error checking wallet connection:", error);
+                const signer = await provider.getSigner();
+                const addr = accounts[0];
+                setAddress(addr);
+                updateBalance(provider, addr);
+                if (onConnect) onConnect(provider, signer, addr);
             }
+        } catch (error) {
+            console.error("Error checking wallet connection:", error);
         }
     }
 
@@ -233,12 +237,14 @@ export function ConnectWallet({ onConnect }: ConnectWalletProps) {
         }
 
         try {
+            // Use directRpcUrl (real node) for MetaMask, not the proxied URL
+            const rpcUrl = selectedNetwork.directRpcUrl || selectedNetwork.rpcUrl;
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
                     chainId: '0x' + Number(selectedNetwork.chainId).toString(16),
                     chainName: selectedNetwork.name,
-                    rpcUrls: [selectedNetwork.rpcUrl],
+                    rpcUrls: [rpcUrl],
                     nativeCurrency: {
                         name: selectedNetwork.tokenSymbol || 'TOKEN',
                         symbol: selectedNetwork.tokenSymbol || 'TOKEN',

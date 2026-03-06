@@ -15,6 +15,11 @@ export class ContractsController {
         return this.contractsService.create(contract);
     }
 
+    @Post('compile')
+    async compile(@Body() body: { sourceCode: string, contractName?: string }) {
+        return this.contractsService.compileSolidity(body.sourceCode, body.contractName);
+    }
+
     @Post('deploy')
     async deploy(@Body() deployDto: {
         name: string;

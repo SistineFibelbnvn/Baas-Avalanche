@@ -187,6 +187,20 @@ export const api = {
                 body: JSON.stringify(data),
             }),
 
+        compile: (sourceCode: string, contractName?: string): Promise<{
+            success: boolean;
+            contractName?: string;
+            abi?: any[];
+            bytecode?: string;
+            errors?: string[];
+            warnings?: string[];
+            availableContracts?: string[];
+        }> =>
+            fetchJson(`${API_BASE}/contracts/compile`, {
+                method: 'POST',
+                body: JSON.stringify({ sourceCode, contractName }),
+            }),
+
         deploy: (data: {
             name: string;
             sourceCode?: string;

@@ -101,6 +101,17 @@ export class SubnetsService implements OnModuleInit {
     const release = await cliMutex.acquire();
     this.logger.log('Auto-start: acquired CLI lock');
 
+    // Helper: run command with a timeout (default 90s) to prevent indefinite blocking
+    const runWithTimeout = async (args: string[], opId: string, timeoutMs = 90_000) => {
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error(`Command timed out after ${timeoutMs / 1000}s`)), timeoutMs)
+      );
+      return Promise.race([
+        this.runCommandWithOutput(cliPath, args, opId, process.cwd()),
+        timeoutPromise,
+      ]);
+    };
+
     try {
       const operationId = `auto-start-${Date.now()}`;
       const operation: SubnetOperation = {
@@ -113,12 +124,12 @@ export class SubnetsService implements OnModuleInit {
       };
       operations.set(operationId, operation);
 
-      // Step 1: Start the network
+      // Step 1: Start the network (with timeout)
       this.logger.log('Auto-start [1/4]: Starting network...');
       try {
-        await this.runCommandWithOutput(cliPath, ['network', 'start', '--skip-update-check'], operationId, process.cwd());
+        await runWithTimeout(['network', 'start', '--skip-update-check'], operationId);
       } catch (e) {
-        this.logger.log('Auto-start: first start attempt done (may already be running)');
+        this.logger.log(`Auto-start: first start attempt done (${(e as Error).message || 'may already be running'})`);
       }
 
       // Step 2: Inject http-host=0.0.0.0 config so Windows can reach WSL node
@@ -128,15 +139,15 @@ export class SubnetsService implements OnModuleInit {
       // Step 3: Restart network so config takes effect
       this.logger.log('Auto-start [3/4]: Restarting network with new config...');
       try {
-        await this.runCommandWithOutput(cliPath, ['network', 'stop', '--skip-update-check'], operationId, process.cwd());
+        await runWithTimeout(['network', 'stop', '--skip-update-check'], operationId, 30_000);
       } catch (e) {
-        this.logger.log('Auto-start: stop before restart done');
+        this.logger.log(`Auto-start: stop before restart done (${(e as Error).message})`);
       }
 
       // Small delay to let processes fully stop
       await new Promise(r => setTimeout(r, 2000));
 
-      await this.runCommandWithOutput(cliPath, ['network', 'start', '--skip-update-check'], operationId, process.cwd());
+      await runWithTimeout(['network', 'start', '--skip-update-check'], operationId);
 
       // Step 4: Wait for node to be healthy
       this.logger.log('Auto-start [4/4]: Waiting for node to become healthy...');
@@ -712,10 +723,21 @@ export class SubnetsService implements OnModuleInit {
       };
 
       // Add allowlists if provided
+      // IMPORTANT: Always include EWOQ key as admin when using --ewoq deploy flag
+      const EWOQ_ADDRESS = '0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC';
+
+      const ensureEwoqAdmin = (adminAddresses: string[] = []): string[] => {
+        const normalized = adminAddresses.map(a => a.toLowerCase());
+        if (!normalized.includes(EWOQ_ADDRESS.toLowerCase())) {
+          return [EWOQ_ADDRESS, ...adminAddresses];
+        }
+        return adminAddresses;
+      };
+
       if (config.contractDeployerAllowlist?.enabled) {
         genesisConfig.contractDeployerAllowListConfig = {
           blockTimestamp,
-          adminAddresses: config.contractDeployerAllowlist.adminAddresses || [],
+          adminAddresses: ensureEwoqAdmin(config.contractDeployerAllowlist.adminAddresses || []),
           managerAddresses: config.contractDeployerAllowlist.managerAddresses || [],
           enabledAddresses: config.contractDeployerAllowlist.enabledAddresses || [],
         };
@@ -723,7 +745,7 @@ export class SubnetsService implements OnModuleInit {
       if (config.transactionAllowlist?.enabled) {
         genesisConfig.txAllowListConfig = {
           blockTimestamp,
-          adminAddresses: config.transactionAllowlist.adminAddresses || [],
+          adminAddresses: ensureEwoqAdmin(config.transactionAllowlist.adminAddresses || []),
           managerAddresses: config.transactionAllowlist.managerAddresses || [],
           enabledAddresses: config.transactionAllowlist.enabledAddresses || [],
         };
@@ -731,7 +753,7 @@ export class SubnetsService implements OnModuleInit {
       if (config.feeManagerAllowlist?.enabled) {
         genesisConfig.feeManagerConfig = {
           blockTimestamp,
-          adminAddresses: config.feeManagerAllowlist.adminAddresses || [],
+          adminAddresses: ensureEwoqAdmin(config.feeManagerAllowlist.adminAddresses || []),
           managerAddresses: config.feeManagerAllowlist.managerAddresses || [],
           enabledAddresses: config.feeManagerAllowlist.enabledAddresses || [],
         };
@@ -850,21 +872,33 @@ export class SubnetsService implements OnModuleInit {
       patched = true;
     }
 
-    // 3. Patch allowlists
+    // 3. Patch allowlists (ensure EWOQ admin for deploy compatibility)
     if (config.genesisData?.config) {
       const userConfig = config.genesisData.config as any;
+      const EWOQ = '0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC';
+
+      const ensureEwoq = (cfg: any) => {
+        if (cfg?.adminAddresses) {
+          const lower = cfg.adminAddresses.map((a: string) => a.toLowerCase());
+          if (!lower.includes(EWOQ.toLowerCase())) {
+            cfg.adminAddresses = [EWOQ, ...cfg.adminAddresses];
+          }
+        }
+        return cfg;
+      };
+
       if (userConfig.contractDeployerAllowListConfig && genesis.config) {
-        genesis.config.contractDeployerAllowListConfig = userConfig.contractDeployerAllowListConfig;
+        genesis.config.contractDeployerAllowListConfig = ensureEwoq(userConfig.contractDeployerAllowListConfig);
         this.logger.log('Patched contractDeployerAllowListConfig');
         patched = true;
       }
       if (userConfig.txAllowListConfig && genesis.config) {
-        genesis.config.txAllowListConfig = userConfig.txAllowListConfig;
+        genesis.config.txAllowListConfig = ensureEwoq(userConfig.txAllowListConfig);
         this.logger.log('Patched txAllowListConfig');
         patched = true;
       }
       if (userConfig.feeManagerConfig && genesis.config) {
-        genesis.config.feeManagerConfig = userConfig.feeManagerConfig;
+        genesis.config.feeManagerConfig = ensureEwoq(userConfig.feeManagerConfig);
         this.logger.log('Patched feeManagerConfig');
         patched = true;
       }

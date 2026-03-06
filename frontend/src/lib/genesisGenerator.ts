@@ -108,12 +108,20 @@ function toWei(amount: string): string {
 }
 
 // Generate allowlist precompile config
+// Always include EWOQ key as admin (required for --ewoq deploy)
 function generateAllowlistConfig(config: AllowlistConfig, blockTimestamp: number) {
     if (!config.enabled) return null;
 
+    const EWOQ_ADDRESS = '0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC';
+    const admins = config.adminAddresses.filter(a => a.length > 0);
+    const hasEwoq = admins.some(a => a.toLowerCase() === EWOQ_ADDRESS.toLowerCase());
+    if (!hasEwoq) {
+        admins.unshift(EWOQ_ADDRESS);
+    }
+
     return {
         blockTimestamp,
-        adminAddresses: config.adminAddresses.filter(a => a.length > 0),
+        adminAddresses: admins,
         managerAddresses: config.managerAddresses.filter(a => a.length > 0),
         enabledAddresses: config.enabledAddresses.filter(a => a.length > 0),
     };

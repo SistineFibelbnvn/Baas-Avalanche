@@ -2,7 +2,7 @@
 
 > **Blockchain-as-a-Service for Avalanche L1 Networks**
 
-A production-ready platform for creating, managing, and interacting with custom Avalanche Layer 1 blockchains. Built for enterprises and developers who need full control over their blockchain infrastructure.
+A local development platform for creating, managing, and interacting with custom Avalanche Layer 1 blockchains. Built for enterprises and developers who need full control over their blockchain infrastructure.
 
 ![Dashboard Preview](docs/assets/dashboard-preview.png)
 
@@ -232,6 +232,4 @@ For questions or issues, please open a GitHub issue.
 ---
 
 Built with ❤️ for the Avalanche ecosystem
-# Baas-Avalanche
-# Baas-Avalanche
 # Baas-Avalanche

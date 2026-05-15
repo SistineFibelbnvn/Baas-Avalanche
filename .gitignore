@@ -1,11 +1,8 @@
 # ===========================
-# Local development tool files
+# Local development files
 # ===========================
-.cursor/
 .vscode/
 .idea/
 *.log
-*.conversation*
-*chat_history*
-implementation_plan.md
-walkthrough.md
+.env
+.env.*
